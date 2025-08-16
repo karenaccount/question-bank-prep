@@ -1,25 +1,29 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, BarChart3, Users, Package, Brain, TrendingUp } from "lucide-react";
+import { Search, BarChart3, Users, Package, Brain, TrendingUp, ChevronDown } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useQuiz } from "@/contexts/QuizContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
 
 const AnswerStatistics = () => {
   const { getQuizzesByTeacher, getQuizzesByStudent } = useQuiz();
   const { user } = useAuth();
   
   // 答题统计相关状态
-  const [statsDimension, setStatsDimension] = useState<'student' | 'order' | 'knowledge'>('student');
+  const [statsDimension, setStatsDimension] = useState<'student' | 'order' | 'knowledge'>('knowledge');
   const [selectedStudent, setSelectedStudent] = useState<string>('');
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [selectedOrderForStats, setSelectedOrderForStats] = useState<string>('');
   const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  const [showStudentDropdown, setShowStudentDropdown] = useState(false);
+  const [showOrderDropdown, setShowOrderDropdown] = useState(false);
+  const studentDropdownRef = useRef<HTMLDivElement>(null);
+  const orderDropdownRef = useRef<HTMLDivElement>(null);
   
   const quizzes = user?.role === 'teacher' 
     ? getQuizzesByTeacher(user.id) 
@@ -155,6 +159,35 @@ const AnswerStatistics = () => {
     };
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (studentDropdownRef.current && !studentDropdownRef.current.contains(event.target as Node)) {
+        setShowStudentDropdown(false);
+      }
+      if (orderDropdownRef.current && !orderDropdownRef.current.contains(event.target as Node)) {
+        setShowOrderDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleStudentSelect = (student: string) => {
+    setSelectedStudent(student);
+    setStudentSearchQuery(student);
+    setShowStudentDropdown(false);
+  };
+
+  const handleOrderSelect = (order: string) => {
+    setSelectedOrderForStats(order);
+    setOrderSearchQuery(order);
+    setShowOrderDropdown(false);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <Card>
@@ -167,6 +200,10 @@ const AnswerStatistics = () => {
         <CardContent>
           <Tabs value={statsDimension} onValueChange={(value) => setStatsDimension(value as any)}>
             <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="knowledge" className="flex items-center gap-1">
+                <Brain className="w-3 h-3" />
+                按知识点
+              </TabsTrigger>
               <TabsTrigger value="student" className="flex items-center gap-1">
                 <Users className="w-3 h-3" />
                 按学生
@@ -175,41 +212,125 @@ const AnswerStatistics = () => {
                 <Package className="w-3 h-3" />
                 按订单
               </TabsTrigger>
-              <TabsTrigger value="knowledge" className="flex items-center gap-1">
-                <Brain className="w-3 h-3" />
-                按知识点
-              </TabsTrigger>
             </TabsList>
+            
+            <TabsContent value="knowledge" className="space-y-6 mt-4">
+              <div className="space-y-6">
+                {/* 知识点错误率柱状图 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5" />
+                      知识点错误率分析
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={knowledgeErrorData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="name" 
+                            angle={-45}
+                            textAnchor="end"
+                            height={100}
+                            fontSize={12}
+                          />
+                          <YAxis 
+                            label={{ value: '错误率 (%)', angle: -90, position: 'insideLeft' }}
+                          />
+                          <Tooltip 
+                            formatter={(value, name) => [`${value}%`, '错误率']}
+                            labelFormatter={(label) => `知识点: ${label}`}
+                          />
+                          <Bar 
+                            dataKey="errorRate" 
+                            fill="hsl(var(--destructive))"
+                            radius={[4, 4, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 常考知识点词云 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Brain className="w-5 h-5" />
+                      常考知识点分布
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="min-h-60 p-6 bg-muted/30 rounded-lg">
+                      <div className="flex flex-wrap justify-center items-center gap-3 leading-relaxed">
+                        {frequentKnowledgeData.map((item, index) => {
+                          const colors = [
+                            'text-blue-600', 'text-green-600', 'text-purple-600', 
+                            'text-red-600', 'text-yellow-600', 'text-indigo-600',
+                            'text-pink-600', 'text-teal-600', 'text-orange-600',
+                            'text-cyan-600'
+                          ];
+                          const randomColor = colors[index % colors.length];
+                          
+                          return (
+                            <span
+                              key={item.name}
+                              className={`${item.size} ${randomColor} font-medium hover:scale-110 transition-transform cursor-pointer inline-block mx-1 my-1`}
+                              title={`出现 ${item.count} 次`}
+                              style={{
+                                fontWeight: Math.min(800, 400 + Math.floor(item.count / 10) * 100)
+                              }}
+                            >
+                              {item.name}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="mt-4 text-sm text-muted-foreground text-center">
+                      * 字体大小代表出现频次，点击查看具体次数
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
             
             <TabsContent value="student" className="space-y-4 mt-4">
               {user?.role === 'teacher' ? (
                 <div className="space-y-4">
-                  {/* 学生搜索 */}
-                  <div className="relative">
-                    <Input
-                      placeholder="请搜索学生姓名"
-                      value={studentSearchQuery}
-                      onChange={(e) => setStudentSearchQuery(e.target.value)}
-                      className="pr-8"
-                    />
-                    <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  </div>
-                  
-                  {/* 学生选择 */}
-                  {filteredStudents.length > 0 && (
-                    <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="选择学生" />
-                      </SelectTrigger>
-                      <SelectContent>
+                  {/* 学生搜索下拉框 */}
+                  <div className="relative" ref={studentDropdownRef}>
+                    <div className="relative">
+                      <Input
+                        placeholder="搜索学生姓名..."
+                        value={studentSearchQuery}
+                        onChange={(e) => {
+                          setStudentSearchQuery(e.target.value);
+                          setShowStudentDropdown(true);
+                        }}
+                        onFocus={() => setShowStudentDropdown(true)}
+                        className="pr-8"
+                      />
+                      <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    </div>
+                    
+                    {/* Student Dropdown */}
+                    {showStudentDropdown && filteredStudents.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
                         {filteredStudents.map((student) => (
-                          <SelectItem key={student} value={student}>
+                          <div
+                            key={student}
+                            className="px-4 py-2 hover:bg-muted cursor-pointer text-sm"
+                            onClick={() => handleStudentSelect(student)}
+                          >
                             {student}
-                          </SelectItem>
+                          </div>
                         ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                      </div>
+                    )}
+                  </div>
                   
                   {/* 学生统计数据 */}
                   {selectedStudent && (() => {
@@ -309,32 +430,37 @@ const AnswerStatistics = () => {
             </TabsContent>
             
             <TabsContent value="order" className="space-y-4 mt-4">
-              {/* 订单搜索 */}
-              <div className="relative">
-                <Input
-                  placeholder="请搜索订单号或学生姓名"
-                  value={orderSearchQuery}
-                  onChange={(e) => setOrderSearchQuery(e.target.value)}
-                  className="pr-8"
-                />
-                <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              </div>
-              
-              {/* 订单选择 */}
-              {filteredOrders.length > 0 && (
-                <Select value={selectedOrderForStats} onValueChange={setSelectedOrderForStats}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择订单" />
-                  </SelectTrigger>
-                  <SelectContent>
+              {/* 订单搜索下拉框 */}
+              <div className="relative" ref={orderDropdownRef}>
+                <div className="relative">
+                  <Input
+                    placeholder="搜索订单号..."
+                    value={orderSearchQuery}
+                    onChange={(e) => {
+                      setOrderSearchQuery(e.target.value);
+                      setShowOrderDropdown(true);
+                    }}
+                    onFocus={() => setShowOrderDropdown(true)}
+                    className="pr-8"
+                  />
+                  <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                </div>
+                
+                {/* Order Dropdown */}
+                {showOrderDropdown && filteredOrders.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-60 overflow-y-auto">
                     {filteredOrders.map((order) => (
-                      <SelectItem key={order} value={order}>
+                      <div
+                        key={order}
+                        className="px-4 py-2 hover:bg-muted cursor-pointer text-sm"
+                        onClick={() => handleOrderSelect(order)}
+                      >
                         {order}
-                      </SelectItem>
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
-              )}
+                  </div>
+                )}
+              </div>
               
               {/* 订单统计数据 */}
               {selectedOrderForStats && (() => {
@@ -381,89 +507,6 @@ const AnswerStatistics = () => {
                   </div>
                 );
               })()}
-            </TabsContent>
-            
-            <TabsContent value="knowledge" className="space-y-6 mt-4">
-              <div className="space-y-6">
-                {/* 知识点错误率柱状图 */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5" />
-                      知识点错误率分析
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-80">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={knowledgeErrorData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis 
-                            dataKey="name" 
-                            angle={-45}
-                            textAnchor="end"
-                            height={100}
-                            fontSize={12}
-                          />
-                          <YAxis 
-                            label={{ value: '错误率 (%)', angle: -90, position: 'insideLeft' }}
-                          />
-                          <Tooltip 
-                            formatter={(value, name) => [`${value}%`, '错误率']}
-                            labelFormatter={(label) => `知识点: ${label}`}
-                          />
-                          <Bar 
-                            dataKey="errorRate" 
-                            fill="hsl(var(--destructive))"
-                            radius={[4, 4, 0, 0]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* 常考知识点词云 */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Brain className="w-5 h-5" />
-                      常考知识点分布
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="min-h-60 p-6 bg-muted/30 rounded-lg">
-                      <div className="flex flex-wrap justify-center items-center gap-3 leading-relaxed">
-                        {frequentKnowledgeData.map((item, index) => {
-                          const colors = [
-                            'text-blue-600', 'text-green-600', 'text-purple-600', 
-                            'text-red-600', 'text-yellow-600', 'text-indigo-600',
-                            'text-pink-600', 'text-teal-600', 'text-orange-600',
-                            'text-cyan-600'
-                          ];
-                          const randomColor = colors[index % colors.length];
-                          
-                          return (
-                            <span
-                              key={item.name}
-                              className={`${item.size} ${randomColor} font-medium hover:scale-110 transition-transform cursor-pointer inline-block mx-1 my-1`}
-                              title={`出现 ${item.count} 次`}
-                              style={{
-                                fontWeight: Math.min(800, 400 + Math.floor(item.count / 10) * 100)
-                              }}
-                            >
-                              {item.name}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div className="mt-4 text-sm text-muted-foreground text-center">
-                      * 字体大小代表出现频次，点击查看具体次数
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
