@@ -60,9 +60,10 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
     if (currentStep < generationSteps.length && !isCompleted) {
       const step = generationSteps[currentStep];
       
-      // For the last step, don't use timer-based progress, wait for typewriter
+      // For the last step, handle differently but still show progress
       if (currentStep === generationSteps.length - 1) {
-        // Start typewriter effect immediately when entering the last step
+        // Mark the step as started and show progress
+        setProgress(0);
         setTimeout(() => {
           startTypewriterEffect();
         }, 500);
@@ -74,6 +75,7 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
           const newProgress = prev + (100 / (step.duration / 100));
           if (newProgress >= 100) {
             clearInterval(interval);
+            // Mark current step as completed
             setCompletedSteps(prev => [...prev, step.id]);
             
             // Move to next step
@@ -167,9 +169,9 @@ D. 函数必须是线性的
     ];
   };
 
-  const overallProgress = currentStep === generationSteps.length - 1 && completedSteps.includes(generationSteps[currentStep].id) 
+  const overallProgress = completedSteps.length === generationSteps.length 
     ? 100 
-    : ((currentStep + progress / 100) / generationSteps.length) * 100;
+    : ((completedSteps.length + progress / 100) / generationSteps.length) * 100;
 
   return (
     <div className="container mx-auto px-4 py-8">
