@@ -43,6 +43,16 @@ const QuizDetail = () => {
   const quiz = quizzes.find(q => q.id === id);
   const [showAllAnswers, setShowAllAnswers] = useState(false);
   const [expandedQuestions, setExpandedQuestions] = useState<Record<string, boolean>>({});
+  const [activeQuestionId, setActiveQuestionId] = useState<string>('');
+
+  // Function to scroll to specific question
+  const scrollToQuestion = (questionIndex: number) => {
+    const element = document.getElementById(`question-${questionIndex}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setActiveQuestionId(`question-${questionIndex}`);
+    }
+  };
 
   if (!quiz) {
     return (
@@ -158,20 +168,23 @@ const QuizDetail = () => {
           <div className="px-4 py-6">
             {/* Header */}
             <div className="mb-6">
-              {/* Title and Back Button */}
-              <div className="flex items-center gap-4 mb-3">
-                <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  返回
-                </Button>
-                <h1 className="text-2xl font-bold text-foreground">{quiz.name}</h1>
-              </div>
-              
-              {/* Status and Actions */}
-              <div className="flex items-center justify-between">
+              {/* Title, Status and Back Button */}
+              <div className="flex items-center justify-between gap-4 mb-3">
+                <div className="flex items-center gap-4">
+                  <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    返回
+                  </Button>
+                  <h1 className="text-2xl font-bold text-foreground">{quiz.name}</h1>
+                </div>
+                
                 <div className="flex items-center gap-3">
                   {getStatusBadge()}
                 </div>
+              </div>
+              
+              {/* Actions */}
+              <div className="flex justify-end">
                 <div className="flex flex-wrap gap-2">
                   <QuizActions quiz={quiz} isFromFavorites={isFromFavorites} />
                 </div>
@@ -179,14 +192,14 @@ const QuizDetail = () => {
             </div>
 
             <div className="space-y-6">
-              {/* Quiz Info */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">{/* 试卷信息和分析结果并排显示 */}
+              {/* Quiz Info - Full Width */}
+              <div className="grid grid-cols-1 gap-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>试卷信息</CardTitle>
                   </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                   <div className="flex items-center gap-3">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <div>
@@ -277,9 +290,9 @@ const QuizDetail = () => {
                 {/* Quiz Analysis */}
                 {quiz.isCompleted && (
                   <Card>
-                <CardHeader>
-                  <CardTitle>答题结果分析</CardTitle>
-                </CardHeader>
+                    <CardHeader>
+                      <CardTitle>答题结果分析</CardTitle>
+                    </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
@@ -339,6 +352,24 @@ const QuizDetail = () => {
                 )}
               </div>
 
+              {/* Question Navigation - Fixed */}
+              <div className="sticky top-4 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-lg border p-4 mb-6">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-medium text-muted-foreground mr-2">快速导航:</span>
+                  {quiz.questions.map((_, index) => (
+                    <Button
+                      key={index}
+                      variant={activeQuestionId === `question-${index}` ? "default" : "outline"}
+                      size="sm"
+                      className="w-8 h-8 p-0"
+                      onClick={() => scrollToQuestion(index)}
+                    >
+                      {index + 1}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
               {/* Questions */}
               <Card>
                 <CardHeader>
@@ -367,9 +398,13 @@ const QuizDetail = () => {
                   </div>
                 </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div className="space-y-6">
                 {quiz.questions.map((question: any, index: number) => (
-                  <Card key={index} className="border-l-4 border-l-primary">
+                  <Card 
+                    key={index} 
+                    id={`question-${index}`}
+                    className="border-l-4 border-l-primary scroll-mt-24"
+                  >
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
