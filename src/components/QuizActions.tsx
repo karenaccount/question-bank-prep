@@ -57,7 +57,8 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
   const canAnswer = isStudent && (!quiz.isCompleted || quiz.studentScore === undefined);
   
   // Check if this quiz is from favorites page
-  const isFromFavorites = window.location.pathname === '/favorites' || window.location.pathname.includes('/quiz/') && document.referrer.includes('favorites');
+  const isFromFavorites = window.location.pathname === '/favorites' || 
+    (window.location.pathname.includes('/quiz/') && document.referrer.includes('favorites'));
 
   const handleEdit = () => {
     if (onEdit) {
@@ -163,6 +164,17 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
                 </DropdownMenu>
               </>
             )}
+            {showLimitedActions && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowAddToOrderDialog(true)}
+                className="h-8 w-8 p-0"
+                title="添加到订单"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            )}
           </div>
 
           {/* Delete Confirmation Dialog */}
@@ -190,19 +202,17 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
           </AlertDialog>
 
           {/* Dialogs */}
+          <AddToOrderDialog 
+            open={showAddToOrderDialog}
+            onOpenChange={setShowAddToOrderDialog}
+            quiz={quiz}
+          />
           {!isFromFavorites && (
-            <>
-              <AddToOrderDialog 
-                open={showAddToOrderDialog}
-                onOpenChange={setShowAddToOrderDialog}
-                quiz={quiz}
-              />
-              <ShareQuizDialog 
-                open={showShareDialog}
-                onOpenChange={setShowShareDialog}
-                quiz={quiz}
-              />
-            </>
+            <ShareQuizDialog 
+              open={showShareDialog}
+              onOpenChange={setShowShareDialog}
+              quiz={quiz}
+            />
           )}
         </>
       );
@@ -302,47 +312,64 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
               </>
             )}
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowAddToOrderDialog(true)}
-            className="gap-2"
-          >
-            <Copy className="h-4 w-4" />
-            添加到其他订单
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowShareDialog(true)}
-            className="gap-2"
-          >
-            <Share2 className="h-4 w-4" />
-            发给学生
-          </Button>
           
-          {/* Other actions in dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-36">
-              <DropdownMenuItem onClick={handleEdit}>
-                <Edit className="h-4 w-4 mr-2" />
-                编辑试卷
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => setShowDeleteDialog(true)}
-                className="text-destructive focus:text-destructive"
+          {!isFromFavorites && (
+            <>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowAddToOrderDialog(true)}
+                className="gap-2"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
-                删除试卷
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <Copy className="h-4 w-4" />
+                添加到其他订单
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowShareDialog(true)}
+                className="gap-2"
+              >
+                <Share2 className="h-4 w-4" />
+                发给学生
+              </Button>
+              
+              {/* Other actions in dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-36">
+                  <DropdownMenuItem onClick={handleEdit}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    编辑试卷
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    删除试卷
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
+          
+          {isFromFavorites && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowAddToOrderDialog(true)}
+              className="gap-2"
+            >
+              <Copy className="h-4 w-4" />
+              添加到订单
+            </Button>
+          )}
         </div>
 
         {/* Delete Confirmation Dialog */}
@@ -377,11 +404,13 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
         />
 
         {/* Share Quiz Dialog */}
-        <ShareQuizDialog 
-          open={showShareDialog}
-          onOpenChange={setShowShareDialog}
-          quiz={quiz}
-        />
+        {!isFromFavorites && (
+          <ShareQuizDialog 
+            open={showShareDialog}
+            onOpenChange={setShowShareDialog}
+            quiz={quiz}
+          />
+        )}
       </>
     );
   }
