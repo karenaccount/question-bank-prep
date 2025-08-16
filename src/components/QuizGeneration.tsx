@@ -46,6 +46,7 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
   const [estimatedTime, setEstimatedTime] = useState(0);
   const [generatedContent, setGeneratedContent] = useState("");
   const [isTypewriting, setIsTypewriting] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   useEffect(() => {
     // Calculate estimated time based on config complexity
@@ -56,8 +57,18 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
   }, [config]);
 
   useEffect(() => {
-    if (currentStep < generationSteps.length) {
+    if (currentStep < generationSteps.length && !isCompleted) {
       const step = generationSteps[currentStep];
+      
+      // For the last step, don't use timer-based progress, wait for typewriter
+      if (currentStep === generationSteps.length - 1) {
+        // Start typewriter effect immediately when entering the last step
+        setTimeout(() => {
+          startTypewriterEffect();
+        }, 500);
+        return;
+      }
+      
       const interval = setInterval(() => {
         setProgress(prev => {
           const newProgress = prev + (100 / (step.duration / 100));
@@ -65,23 +76,11 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
             clearInterval(interval);
             setCompletedSteps(prev => [...prev, step.id]);
             
-            if (currentStep === generationSteps.length - 1) {
-              // Last step completed, generation finished
-              return;
-            } else {
-              // Move to next step
-              setTimeout(() => {
-                setCurrentStep(prev => prev + 1);
-                setProgress(0);
-                
-                // If moving to the last step (step 3), start typewriter after a short delay
-                if (currentStep === generationSteps.length - 2) {
-                  setTimeout(() => {
-                    startTypewriterEffect();
-                  }, 1000);
-                }
-              }, 500);
-            }
+            // Move to next step
+            setTimeout(() => {
+              setCurrentStep(prev => prev + 1);
+              setProgress(0);
+            }, 500);
           }
           return Math.min(newProgress, 100);
         });
@@ -89,7 +88,7 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
 
       return () => clearInterval(interval);
     }
-  }, [currentStep]);
+  }, [currentStep, isCompleted]);
 
   const startTypewriterEffect = () => {
     setIsTypewriting(true);
@@ -109,9 +108,17 @@ D. 函数必须是线性的
     const typeInterval = setInterval(() => {
       if (index < content.length) {
         setGeneratedContent(content.substring(0, index + 1));
+        // Update progress based on typewriter progress
+        const typeProgress = (index / content.length) * 100;
+        setProgress(typeProgress);
         index++;
       } else {
         clearInterval(typeInterval);
+        // Mark step as completed and finish
+        setCompletedSteps(prev => [...prev, generationSteps[generationSteps.length - 1].id]);
+        setProgress(100);
+        setIsCompleted(true);
+        
         setTimeout(() => {
           // Generate mock questions and complete
           const mockQuestions = generateMockQuestions(config);
