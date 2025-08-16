@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { BookOpen, User, Settings } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { BookOpen, User, Settings, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import teacherLogo from "@/assets/teacher-logo.png";
 
 const Header = () => {
+  const { isAuthenticated, logout } = useAuth();
   return (
     <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -30,7 +33,30 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" onClick={() => window.location.href = '/auth'}>登录</Button>
+          {isAuthenticated ? (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <LogOut className="w-4 h-4" />
+                  退出登录
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>确认退出登录</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    确定要退出登录吗？退出后需要重新登录才能使用系统功能。
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>取消</AlertDialogCancel>
+                  <AlertDialogAction onClick={logout}>确认退出</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => window.location.href = '/auth'}>登录</Button>
+          )}
         </div>
       </div>
     </header>
