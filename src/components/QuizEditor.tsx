@@ -117,7 +117,7 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
 
     return (
       <Dialog open={!!editingQuestion} onOpenChange={() => setEditingQuestion(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto pb-20">
           <DialogHeader>
             <DialogTitle>编辑题目</DialogTitle>
           </DialogHeader>
@@ -215,11 +215,11 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setEditingQuestion(null)}>
+            <div className="fixed bottom-4 right-4 flex gap-2 z-50">
+              <Button variant="outline" onClick={() => setEditingQuestion(null)} className="shadow-lg">
                 取消
               </Button>
-              <Button onClick={handleSaveEdit}>
+              <Button onClick={handleSaveEdit} className="shadow-lg">
                 保存修改
               </Button>
             </div>
@@ -289,7 +289,7 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
       </div>
 
       {/* Questions List */}
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {questions.map((question, index) => (
           <Card key={question.id} className="relative">
             <CardHeader className="pb-2">

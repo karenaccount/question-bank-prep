@@ -658,7 +658,7 @@ const TeacherDashboard = () => {
                   {/* 订单搜索 */}
                   <div className="relative">
                     <Input
-                      placeholder="搜索订单号"
+                      placeholder="输入订单号或学生姓名"
                       value={orderSearchQuery}
                       onChange={(e) => setOrderSearchQuery(e.target.value)}
                       className="pr-8"

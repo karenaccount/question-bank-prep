@@ -66,12 +66,22 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
             setCompletedSteps(prev => [...prev, step.id]);
             
             if (currentStep === generationSteps.length - 1) {
-              // Start typewriter effect for the last step
+              // Start typewriter effect for the last step immediately when it reaches 100%
               setTimeout(() => {
                 startTypewriterEffect();
               }, 500);
+            } else if (currentStep === generationSteps.length - 2) {
+              // When step 2 completes, move to step 3 and immediately start typewriter
+              setTimeout(() => {
+                setCurrentStep(prev => prev + 1);
+                setProgress(0);
+                // Start typewriter effect immediately when step 3 starts
+                setTimeout(() => {
+                  startTypewriterEffect();
+                }, 100);
+              }, 500);
             } else {
-              // Move to next step
+              // Move to next step normally
               setTimeout(() => {
                 setCurrentStep(prev => prev + 1);
                 setProgress(0);
@@ -227,8 +237,8 @@ D. 函数必须是线性的
           </CardContent>
         </Card>
 
-        {/* Generated Content Preview - Only show when step 3 starts */}
-        {currentStep === generationSteps.length - 1 && completedSteps.includes(generationSteps[currentStep].id) && (
+        {/* Generated Content Preview - Show when step 3 starts or typewriting begins */}
+        {(currentStep === generationSteps.length - 1 && isTypewriting) && (
           <Card>
             <CardHeader>
               <CardTitle className="text-base">题目预览</CardTitle>
