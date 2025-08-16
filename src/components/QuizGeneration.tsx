@@ -60,6 +60,15 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
     if (currentStep < generationSteps.length && !isCompleted) {
       const step = generationSteps[currentStep];
       
+      // For the last step, don't use timer-based progress, wait for typewriter
+      if (currentStep === generationSteps.length - 1) {
+        // Start typewriter effect immediately when entering the last step
+        setTimeout(() => {
+          startTypewriterEffect();
+        }, 500);
+        return;
+      }
+      
       const interval = setInterval(() => {
         setProgress(prev => {
           const newProgress = prev + (100 / (step.duration / 100));
@@ -67,18 +76,11 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
             clearInterval(interval);
             setCompletedSteps(prev => [...prev, step.id]);
             
-            // For the last step, start typewriter effect after completion
-            if (currentStep === generationSteps.length - 1) {
-              setTimeout(() => {
-                startTypewriterEffect();
-              }, 500);
-            } else {
-              // Move to next step for non-last steps
-              setTimeout(() => {
-                setCurrentStep(prev => prev + 1);
-                setProgress(0);
-              }, 500);
-            }
+            // Move to next step
+            setTimeout(() => {
+              setCurrentStep(prev => prev + 1);
+              setProgress(0);
+            }, 500);
           }
           return Math.min(newProgress, 100);
         });
