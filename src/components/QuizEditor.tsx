@@ -17,6 +17,24 @@ import {
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface Question {
   id: number;
@@ -90,13 +108,6 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
     }
   };
 
-  const handleReorderQuestion = (fromIndex: number, toIndex: number) => {
-    const newQuestions = [...questions];
-    const [movedQuestion] = newQuestions.splice(fromIndex, 1);
-    newQuestions.splice(toIndex, 0, movedQuestion);
-    setQuestions(newQuestions);
-  };
-
   const handleRegenerateAll = () => {
     // Simulate regenerating all questions
     const newQuestions = questions.map((q, index) => ({
@@ -108,8 +119,133 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
     setQuestions(newQuestions);
   };
 
+  // Drag and drop handlers
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      setQuestions((items) => {
+        const oldIndex = items.findIndex(item => item.id === active.id);
+        const newIndex = items.findIndex(item => item.id === over.id);
+
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
   const getTotalScore = () => {
     return questions.reduce((sum, q) => sum + q.score, 0);
+  };
+
+  // Sortable Question Item Component
+  const SortableQuestionItem = ({ question, index }: { question: Question; index: number }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: question.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+      <Card 
+        ref={setNodeRef} 
+        style={style} 
+        className={cn(
+          "relative flex flex-col h-full",
+          isDragging && "shadow-lg"
+        )}
+      >
+        <CardHeader className="pb-3 flex-shrink-0">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <div
+                {...attributes}
+                {...listeners}
+                className="cursor-move text-muted-foreground hover:text-foreground transition-colors p-1 rounded"
+              >
+                <GripVertical className="w-4 h-4" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
+                  {questionTypeLabels[question.type as keyof typeof questionTypeLabels]}
+                </span>
+                <span className="text-xs text-muted-foreground">{question.score}分</span>
+              </div>
+            </div>
+            <div className="flex gap-1">
+              <Button variant="ghost" size="sm" onClick={() => handleEditQuestion(question)}>
+                <Edit className="w-3 h-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => handleReplaceQuestion(question.id)}>
+                <RefreshCw className="w-3 h-3" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => handleDeleteQuestion(question.id)}>
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0 flex-1 flex flex-col">
+          <div className="space-y-3 flex-1">
+            <div>
+              <p className="font-medium text-sm leading-tight line-clamp-3">
+                {index + 1}. {question.title}
+              </p>
+            </div>
+            
+            {question.options && (
+              <div className="space-y-1 flex-1">
+                {question.options.slice(0, 3).map((option, optIndex) => (
+                  <div key={optIndex} className={cn(
+                    "text-xs leading-tight line-clamp-1",
+                    question.correctAnswer === optIndex && "text-green-600 font-medium"
+                  )}>
+                    {String.fromCharCode(65 + optIndex)}. {option}
+                  </div>
+                ))}
+                {question.options.length > 3 && (
+                  <div className="text-xs text-muted-foreground">
+                    +{question.options.length - 3} 更多选项
+                  </div>
+                )}
+              </div>
+            )}
+
+            {question.answer && (
+              <div>
+                <p className="text-xs leading-tight line-clamp-2">
+                  <span className="font-medium">参考答案：</span>{question.answer}
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="text-xs text-muted-foreground border-t pt-2 mt-3 space-y-1">
+            <p className="line-clamp-2">
+              <span className="font-medium">解析：</span>{question.explanation}
+            </p>
+            <p className="line-clamp-1">
+              <span className="font-medium">知识点：</span>{question.knowledgePoint}
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   };
 
   const renderQuestionEdit = () => {
@@ -289,80 +425,26 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
       </div>
 
       {/* Questions List */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {questions.map((question, index) => (
-          <Card key={question.id} className="relative flex flex-col h-full">
-            <CardHeader className="pb-3 flex-shrink-0">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <GripVertical className="w-4 h-4 cursor-move text-muted-foreground" />
-                  <div className="flex flex-col gap-1">
-                    <span className="bg-primary/10 text-primary px-2 py-1 rounded text-xs font-medium">
-                      {questionTypeLabels[question.type as keyof typeof questionTypeLabels]}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{question.score}分</span>
-                  </div>
-                </div>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => handleEditQuestion(question)}>
-                    <Edit className="w-3 h-3" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleReplaceQuestion(question.id)}>
-                    <RefreshCw className="w-3 h-3" />
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDeleteQuestion(question.id)}>
-                    <Trash2 className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0 flex-1 flex flex-col">
-              <div className="space-y-3 flex-1">
-                <div>
-                  <p className="font-medium text-sm leading-tight line-clamp-3">
-                    {index + 1}. {question.title}
-                  </p>
-                </div>
-                
-                {question.options && (
-                  <div className="space-y-1 flex-1">
-                    {question.options.slice(0, 3).map((option, optIndex) => (
-                      <div key={optIndex} className={cn(
-                        "text-xs leading-tight line-clamp-1",
-                        question.correctAnswer === optIndex && "text-green-600 font-medium"
-                      )}>
-                        {String.fromCharCode(65 + optIndex)}. {option}
-                      </div>
-                    ))}
-                    {question.options.length > 3 && (
-                      <div className="text-xs text-muted-foreground">
-                        +{question.options.length - 3} 更多选项
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {question.answer && (
-                  <div>
-                    <p className="text-xs leading-tight line-clamp-2">
-                      <span className="font-medium">参考答案：</span>{question.answer}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <div className="text-xs text-muted-foreground border-t pt-2 mt-3 space-y-1">
-                <p className="line-clamp-2">
-                  <span className="font-medium">解析：</span>{question.explanation}
-                </p>
-                <p className="line-clamp-1">
-                  <span className="font-medium">知识点：</span>{question.knowledgePoint}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <DndContext 
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext 
+          items={questions.map(q => q.id)} 
+          strategy={rectSortingStrategy}
+        >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {questions.map((question, index) => (
+              <SortableQuestionItem 
+                key={question.id} 
+                question={question} 
+                index={index} 
+              />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
 
       {/* Fixed Action Buttons */}
       <div className="fixed bottom-4 right-4 flex gap-2">
