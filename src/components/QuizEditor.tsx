@@ -15,6 +15,7 @@ import {
   Plus,
   Eye
 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface Question {
@@ -155,13 +156,21 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
                 </div>
                 <div className="mt-2">
                   <Label>正确答案</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max={editingQuestion.options.length - 1}
-                    value={editingQuestion.correctAnswer as number}
-                    onChange={(e) => setEditingQuestion(prev => prev ? {...prev, correctAnswer: parseInt(e.target.value)} : null)}
-                  />
+                  <Select 
+                    value={editingQuestion.correctAnswer?.toString()} 
+                    onValueChange={(value) => setEditingQuestion(prev => prev ? {...prev, correctAnswer: parseInt(value)} : null)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="选择正确答案" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {editingQuestion.options.map((option, index) => (
+                        <SelectItem key={index} value={index.toString()}>
+                          {String.fromCharCode(65 + index)}. {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             )}
@@ -200,7 +209,8 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
                 <Label>知识点</Label>
                 <Input
                   value={editingQuestion.knowledgePoint}
-                  onChange={(e) => setEditingQuestion(prev => prev ? {...prev, knowledgePoint: e.target.value} : null)}
+                  disabled
+                  className="bg-muted"
                 />
               </div>
             </div>
@@ -259,36 +269,30 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
   );
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onBack} className="gap-2">
-            <ArrowLeft className="w-4 h-4" />
-            返回
-          </Button>
-          <div>
-            <h3 className="text-lg font-semibold">试卷预览与编辑</h3>
-            <p className="text-sm text-muted-foreground">
-              共{questions.length}题 | 总分{getTotalScore()}分
-            </p>
+    <div className="container mx-auto px-4 pb-20">
+      {/* Fixed Header */}
+      <div className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10 py-4 mb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={onBack} className="gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              返回
+            </Button>
+            <div>
+              <h3 className="text-lg font-semibold">试卷预览与编辑</h3>
+              <p className="text-sm text-muted-foreground">
+                共{questions.length}题 | 总分{getTotalScore()}分
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleRegenerateAll} className="gap-2">
-            <RefreshCw className="w-4 h-4" />
-            重新生成
-          </Button>
-          <Button onClick={() => setShowSaveDialog(true)} className="gap-2">
-            <Save className="w-4 h-4" />
-            保存试卷
-          </Button>
         </div>
       </div>
 
-      <div className="space-y-4">
+      {/* Questions List */}
+      <div className="space-y-3">
         {questions.map((question, index) => (
           <Card key={question.id} className="relative">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -312,17 +316,17 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="pt-0">
+              <div className="space-y-2">
                 <div>
-                  <p className="font-medium">{index + 1}. {question.title}</p>
+                  <p className="font-medium text-sm leading-tight">{index + 1}. {question.title}</p>
                 </div>
                 
                 {question.options && (
                   <div className="ml-4 space-y-1">
                     {question.options.map((option, optIndex) => (
                       <div key={optIndex} className={cn(
-                        "text-sm",
+                        "text-xs leading-tight",
                         question.correctAnswer === optIndex && "text-green-600 font-medium"
                       )}>
                         {String.fromCharCode(65 + optIndex)}. {option}
@@ -333,18 +337,30 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
 
                 {question.answer && (
                   <div className="ml-4">
-                    <p className="text-sm"><span className="font-medium">参考答案：</span>{question.answer}</p>
+                    <p className="text-xs leading-tight"><span className="font-medium">参考答案：</span>{question.answer}</p>
                   </div>
                 )}
 
-                <div className="text-xs text-muted-foreground border-t pt-2">
-                  <p><span className="font-medium">解析：</span>{question.explanation}</p>
+                <div className="text-xs text-muted-foreground border-t pt-1 mt-2">
+                  <p className="truncate"><span className="font-medium">解析：</span>{question.explanation}</p>
                   <p><span className="font-medium">知识点：</span>{question.knowledgePoint}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Fixed Action Buttons */}
+      <div className="fixed bottom-4 right-4 flex gap-2">
+        <Button variant="outline" onClick={handleRegenerateAll} className="gap-2 shadow-lg">
+          <RefreshCw className="w-4 h-4" />
+          重新生成
+        </Button>
+        <Button onClick={() => setShowSaveDialog(true)} className="gap-2 shadow-lg">
+          <Save className="w-4 h-4" />
+          保存试卷
+        </Button>
       </div>
 
       {renderQuestionEdit()}

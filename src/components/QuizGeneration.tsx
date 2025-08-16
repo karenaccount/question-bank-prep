@@ -67,7 +67,9 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
             
             if (currentStep === generationSteps.length - 1) {
               // Start typewriter effect for the last step
-              startTypewriterEffect();
+              setTimeout(() => {
+                startTypewriterEffect();
+              }, 500);
             } else {
               // Move to next step
               setTimeout(() => {
@@ -153,7 +155,9 @@ D. 函数必须是线性的
     ];
   };
 
-  const totalProgress = ((currentStep + progress / 100) / generationSteps.length) * 100;
+  const overallProgress = currentStep === generationSteps.length - 1 && completedSteps.includes(generationSteps[currentStep].id) 
+    ? 100 
+    : ((currentStep + progress / 100) / generationSteps.length) * 100;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -172,63 +176,59 @@ D. 函数必须是线性的
       </div>
 
       <div className="max-w-2xl mx-auto space-y-6">
-        {/* Overall Progress */}
+        {/* Overall Progress with 3 Steps */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base">生成进度</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <Progress value={totalProgress} className="h-2" />
-              <div className="text-sm text-center text-muted-foreground">
-                {Math.round(totalProgress)}% 完成
+              <div className="flex items-center justify-between mb-2">
+                {generationSteps.map((step, index) => (
+                  <div key={step.id} className="flex flex-col items-center flex-1">
+                    <div className={cn(
+                      "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors mb-2",
+                      completedSteps.includes(step.id) 
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : index === currentStep
+                          ? "border-primary text-primary"
+                          : "border-muted-foreground/30 text-muted-foreground"
+                    )}>
+                      {completedSteps.includes(step.id) ? (
+                        <Check className="w-4 h-4" />
+                      ) : (
+                        <span className="text-sm font-medium">{index + 1}</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-center max-w-20">
+                      <div className="font-medium truncate">{step.title}</div>
+                    </div>
+                    {index < generationSteps.length - 1 && (
+                      <div className={cn(
+                        "absolute h-0.5 w-20 mt-4 transition-colors",
+                        completedSteps.includes(step.id) ? "bg-primary" : "bg-muted"
+                      )} style={{ left: `${(index + 1) * 33.33}%`, transform: 'translateX(-50%)' }} />
+                    )}
+                  </div>
+                ))}
               </div>
+              <div className="relative">
+                <Progress value={overallProgress} className="h-2" />
+              </div>
+              <div className="text-sm text-center text-muted-foreground">
+                {Math.round(overallProgress)}% 完成
+              </div>
+              {currentStep < generationSteps.length && (
+                <div className="text-xs text-center text-muted-foreground">
+                  当前步骤: {generationSteps[currentStep]?.description}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Steps */}
-        <div className="space-y-4">
-          {generationSteps.map((step, index) => (
-            <Card key={step.id} className={cn(
-              "transition-all duration-300",
-              index === currentStep && "ring-2 ring-primary/20",
-              completedSteps.includes(step.id) && "bg-muted/50"
-            )}>
-              <CardContent className="p-4">
-                <div className="flex items-center gap-4">
-                  <div className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors",
-                    completedSteps.includes(step.id) 
-                      ? "bg-primary border-primary text-primary-foreground"
-                      : index === currentStep
-                        ? "border-primary text-primary"
-                        : "border-muted-foreground/30 text-muted-foreground"
-                  )}>
-                    {completedSteps.includes(step.id) ? (
-                      <Check className="w-4 h-4" />
-                    ) : (
-                      <span className="text-sm font-medium">{index + 1}</span>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium">{step.title}</h4>
-                    <p className="text-sm text-muted-foreground">{step.description}</p>
-                  </div>
-                </div>
-                
-                {index === currentStep && !completedSteps.includes(step.id) && (
-                  <div className="mt-3 ml-12">
-                    <Progress value={progress} className="h-1" />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Generated Content Preview */}
-        {isTypewriting && generatedContent && (
+        {/* Generated Content Preview - Only show when step 3 starts */}
+        {currentStep === generationSteps.length - 1 && completedSteps.includes(generationSteps[currentStep].id) && (
           <Card>
             <CardHeader>
               <CardTitle className="text-base">题目预览</CardTitle>
