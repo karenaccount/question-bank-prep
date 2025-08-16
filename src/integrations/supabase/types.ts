@@ -41,6 +41,7 @@ export type Database = {
       quizzes: {
         Row: {
           assigned_to: string | null
+          completed_at: string | null
           course: string
           created_at: string
           created_by: string
@@ -58,6 +59,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          completed_at?: string | null
           course: string
           created_at?: string
           created_by: string
@@ -75,6 +77,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          completed_at?: string | null
           course?: string
           created_at?: string
           created_by?: string

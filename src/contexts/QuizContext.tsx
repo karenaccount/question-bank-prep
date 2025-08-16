@@ -93,7 +93,7 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
         orderName: quiz.order_name,
         studentName: quiz.student_name,
         course: quiz.course,
-        questions: quiz.questions,
+        questions: Array.isArray(quiz.questions) ? quiz.questions : [],
         totalQuestions: quiz.total_questions,
         totalScore: quiz.total_score,
         createdBy: quiz.created_by,
