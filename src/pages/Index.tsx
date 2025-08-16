@@ -7,11 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import teacherLogo from '@/assets/teacher-logo.png';
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import WelcomeMessage from "@/components/WelcomeMessage";
 import TeacherDashboard from "@/components/TeacherDashboard";
 import StudentDashboard from "@/components/StudentDashboard";
+import { AppSidebar } from "@/components/AppSidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import QuizList from "@/pages/QuizList";
+import FavoritesQuizzes from "@/pages/FavoritesQuizzes";
 
 const Index = () => {
   const { isAuthenticated, user, login } = useAuth();
@@ -19,6 +21,7 @@ const Index = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<'student' | 'teacher'>('teacher');
+  const [activeView, setActiveView] = useState<'home' | 'quiz-list' | 'favorites' | 'login'>('home');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,18 +50,8 @@ const Index = () => {
     }
   };
 
-  if (isAuthenticated && user) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <WelcomeMessage />
-        {user.role === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />}
-        <Footer />
-      </div>
-    );
-  }
-
-  return (
+  // 渲染登录界面
+  const renderLoginForm = () => (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6">
         {/* Logo and Introduction */}
@@ -135,6 +128,50 @@ const Index = () => {
         </Card>
       </div>
     </div>
+  );
+
+  // 渲染主内容
+  const renderMainContent = () => {
+    if (!isAuthenticated) {
+      return renderLoginForm();
+    }
+
+    switch (activeView) {
+      case 'home':
+        return (
+          <div className="min-h-screen bg-background">
+            <WelcomeMessage />
+            {user?.role === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />}
+          </div>
+        );
+      case 'quiz-list':
+        return <QuizList />;
+      case 'favorites':
+        return <FavoritesQuizzes />;
+      case 'login':
+        return renderLoginForm();
+      default:
+        return (
+          <div className="min-h-screen bg-background">
+            <WelcomeMessage />
+            {user?.role === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />}
+          </div>
+        );
+    }
+  };
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar 
+          activeView={activeView} 
+          onViewChange={setActiveView} 
+        />
+        <SidebarInset className="flex-1">
+          {renderMainContent()}
+        </SidebarInset>
+      </div>
+    </SidebarProvider>
   );
 };
 
