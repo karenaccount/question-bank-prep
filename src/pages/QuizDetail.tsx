@@ -354,27 +354,22 @@ const QuizDetail = () => {
 
               {/* Question Navigation - Fixed */}
               <div className="sticky top-4 z-20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-lg border p-4 mb-6">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium text-muted-foreground mr-2">快速导航:</span>
-                  {quiz.questions.map((_, index) => (
-                    <Button
-                      key={index}
-                      variant={activeQuestionId === `question-${index}` ? "default" : "outline"}
-                      size="sm"
-                      className="w-8 h-8 p-0"
-                      onClick={() => scrollToQuestion(index)}
-                    >
-                      {index + 1}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Questions */}
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle>试卷题目</CardTitle>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-medium text-muted-foreground mr-2">快速导航:</span>
+                    {quiz.questions.map((_, index) => (
+                      <Button
+                        key={index}
+                        variant={activeQuestionId === `question-${index}` ? "default" : "outline"}
+                        size="sm"
+                        className="w-8 h-8 p-0"
+                        onClick={() => scrollToQuestion(index)}
+                      >
+                        {index + 1}
+                      </Button>
+                    ))}
+                  </div>
+                  
                   {canViewAnswers() && (
                     <Button
                       variant="outline"
@@ -395,7 +390,13 @@ const QuizDetail = () => {
                       )}
                     </Button>
                   )}
-                  </div>
+                </div>
+              </div>
+
+              {/* Questions */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>试卷题目</CardTitle>
                 </CardHeader>
               <CardContent>
                 <div className="space-y-6">
