@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, BarChart3, Users, Package, Brain } from "lucide-react";
+import { Search, BarChart3, Users, Package, Brain, TrendingUp } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useQuiz } from "@/contexts/QuizContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -70,6 +71,54 @@ const AnswerStatistics = () => {
       weakKnowledgePoints
     };
   };
+  
+  // 模拟知识点错误率数据
+  const knowledgeErrorData = [
+    { name: '函数与方程', errorRate: 45, totalQuestions: 120 },
+    { name: '几何图形', errorRate: 38, totalQuestions: 95 },
+    { name: '数据分析', errorRate: 35, totalQuestions: 88 },
+    { name: '概率统计', errorRate: 32, totalQuestions: 76 },
+    { name: '代数运算', errorRate: 28, totalQuestions: 102 },
+    { name: '三角函数', errorRate: 25, totalQuestions: 65 },
+    { name: '立体几何', errorRate: 23, totalQuestions: 54 },
+    { name: '数列', errorRate: 22, totalQuestions: 43 },
+    { name: '不等式', errorRate: 20, totalQuestions: 38 },
+    { name: '圆锥曲线', errorRate: 18, totalQuestions: 32 },
+    { name: '导数应用', errorRate: 17, totalQuestions: 29 },
+    { name: '向量运算', errorRate: 15, totalQuestions: 25 },
+    { name: '排列组合', errorRate: 14, totalQuestions: 22 },
+    { name: '复数', errorRate: 12, totalQuestions: 18 },
+    { name: '集合运算', errorRate: 10, totalQuestions: 15 },
+    { name: '逻辑推理', errorRate: 9, totalQuestions: 12 },
+    { name: '平面几何', errorRate: 8, totalQuestions: 10 },
+    { name: '指数对数', errorRate: 7, totalQuestions: 8 },
+    { name: '二项式定理', errorRate: 6, totalQuestions: 6 },
+    { name: '极限', errorRate: 5, totalQuestions: 4 }
+  ];
+  
+  // 模拟常考知识点数据（词云样式）
+  const frequentKnowledgeData = [
+    { name: '函数与方程', count: 120, size: 'text-2xl' },
+    { name: '代数运算', count: 102, size: 'text-xl' },
+    { name: '几何图形', count: 95, size: 'text-xl' },
+    { name: '数据分析', count: 88, size: 'text-lg' },
+    { name: '概率统计', count: 76, size: 'text-lg' },
+    { name: '三角函数', count: 65, size: 'text-base' },
+    { name: '立体几何', count: 54, size: 'text-base' },
+    { name: '数列', count: 43, size: 'text-sm' },
+    { name: '不等式', count: 38, size: 'text-sm' },
+    { name: '圆锥曲线', count: 32, size: 'text-sm' },
+    { name: '导数应用', count: 29, size: 'text-xs' },
+    { name: '向量运算', count: 25, size: 'text-xs' },
+    { name: '排列组合', count: 22, size: 'text-xs' },
+    { name: '复数', count: 18, size: 'text-xs' },
+    { name: '集合运算', count: 15, size: 'text-xs' },
+    { name: '逻辑推理', count: 12, size: 'text-xs' },
+    { name: '平面几何', count: 10, size: 'text-xs' },
+    { name: '指数对数', count: 8, size: 'text-xs' },
+    { name: '二项式定理', count: 6, size: 'text-xs' },
+    { name: '极限', count: 4, size: 'text-xs' }
+  ];
   
   // 计算订单统计数据
   const getOrderStats = (orderName: string) => {
@@ -334,11 +383,86 @@ const AnswerStatistics = () => {
               })()}
             </TabsContent>
             
-            <TabsContent value="knowledge" className="space-y-4 mt-4">
-              <div className="text-center py-8">
-                <Brain className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
-                <h3 className="text-lg font-medium mb-2">知识点统计</h3>
-                <p className="text-muted-foreground">该功能正在开发中，敬请期待</p>
+            <TabsContent value="knowledge" className="space-y-6 mt-4">
+              <div className="space-y-6">
+                {/* 知识点错误率柱状图 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5" />
+                      知识点错误率分析
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="h-80">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={knowledgeErrorData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis 
+                            dataKey="name" 
+                            angle={-45}
+                            textAnchor="end"
+                            height={100}
+                            fontSize={12}
+                          />
+                          <YAxis 
+                            label={{ value: '错误率 (%)', angle: -90, position: 'insideLeft' }}
+                          />
+                          <Tooltip 
+                            formatter={(value, name) => [`${value}%`, '错误率']}
+                            labelFormatter={(label) => `知识点: ${label}`}
+                          />
+                          <Bar 
+                            dataKey="errorRate" 
+                            fill="hsl(var(--destructive))"
+                            radius={[4, 4, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* 常考知识点词云 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Brain className="w-5 h-5" />
+                      常考知识点分布
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="min-h-60 p-6 bg-muted/30 rounded-lg">
+                      <div className="flex flex-wrap justify-center items-center gap-3 leading-relaxed">
+                        {frequentKnowledgeData.map((item, index) => {
+                          const colors = [
+                            'text-blue-600', 'text-green-600', 'text-purple-600', 
+                            'text-red-600', 'text-yellow-600', 'text-indigo-600',
+                            'text-pink-600', 'text-teal-600', 'text-orange-600',
+                            'text-cyan-600'
+                          ];
+                          const randomColor = colors[index % colors.length];
+                          
+                          return (
+                            <span
+                              key={item.name}
+                              className={`${item.size} ${randomColor} font-medium hover:scale-110 transition-transform cursor-pointer inline-block mx-1 my-1`}
+                              title={`出现 ${item.count} 次`}
+                              style={{
+                                fontWeight: Math.min(800, 400 + Math.floor(item.count / 10) * 100)
+                              }}
+                            >
+                              {item.name}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div className="mt-4 text-sm text-muted-foreground text-center">
+                      * 字体大小代表出现频次，点击查看具体次数
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
           </Tabs>
