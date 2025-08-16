@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateRange } from "react-day-picker";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuiz } from "@/contexts/QuizContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +20,7 @@ const QuizList = () => {
   const navigate = useNavigate();
   
   const [orderQuery, setOrderQuery] = useState("");
-  const [dateRange, setDateRange] = useState<{from?: Date; to?: Date}>({});
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [studentQuery, setStudentQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   
@@ -59,7 +60,7 @@ const QuizList = () => {
     const matchesStatus = statusFilter === "all" || getStatusText(quiz) === statusFilter;
     
     // Date range filter
-    const matchesDate = !dateRange.from || !dateRange.to || 
+    const matchesDate = !dateRange?.from || !dateRange?.to || 
       (quiz.createdAt >= dateRange.from && quiz.createdAt <= dateRange.to);
     
     return matchesOrder && matchesStudent && matchesStatus && matchesDate;
@@ -133,8 +134,8 @@ const QuizList = () => {
               <div>
                 <label className="text-sm font-medium mb-2 block">时间段</label>
                 <DateRangePicker
-                  value={dateRange.from && dateRange.to ? { from: dateRange.from, to: dateRange.to } : undefined}
-                  onChange={(range) => setDateRange(range || {})}
+                  value={dateRange}
+                  onChange={setDateRange}
                   placeholder="选择日期范围"
                 />
               </div>
@@ -198,7 +199,7 @@ const QuizList = () => {
                   <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium text-foreground mb-2">暂无试卷</h3>
                   <p className="text-muted-foreground">
-                    {orderQuery || studentQuery || statusFilter !== "all" || dateRange.from
+                    {orderQuery || studentQuery || statusFilter !== "all" || dateRange?.from
                       ? "没有符合筛选条件的试卷"
                       : user?.role === 'teacher' ? "您还没有创建任何试卷" : "您还没有收到任何试卷"
                     }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DateRange } from "react-day-picker";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuiz } from "@/contexts/QuizContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +37,7 @@ const FavoritesQuizzes = () => {
   const navigate = useNavigate();
   
   const [orderQuery, setOrderQuery] = useState("");
-  const [dateRange, setDateRange] = useState<{from?: Date; to?: Date}>({});
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [studentQuery, setStudentQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [knowledgePointFilter, setKnowledgePointFilter] = useState("all");
@@ -77,7 +78,7 @@ const FavoritesQuizzes = () => {
     const matchesScenario = scenarioFilter === "all"; // Scenario filtering disabled for now
     
     // Date range filter
-    const matchesDate = !dateRange.from || !dateRange.to || 
+    const matchesDate = !dateRange?.from || !dateRange?.to || 
       (quiz.createdAt >= dateRange.from && quiz.createdAt <= dateRange.to);
     
     return matchesOrder && matchesStudent && matchesSubject && matchesKnowledgePoint && matchesScenario && matchesDate;
@@ -163,8 +164,8 @@ const FavoritesQuizzes = () => {
               <div>
                 <label className="text-sm font-medium mb-2 block">时间段</label>
                 <DateRangePicker
-                  value={dateRange.from && dateRange.to ? { from: dateRange.from, to: dateRange.to } : undefined}
-                  onChange={(range) => setDateRange(range || {})}
+                  value={dateRange}
+                  onChange={setDateRange}
                   placeholder="选择日期范围"
                 />
               </div>
@@ -259,7 +260,7 @@ const FavoritesQuizzes = () => {
                   <Heart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium text-foreground mb-2">暂无收藏</h3>
                   <p className="text-muted-foreground">
-                    {orderQuery || studentQuery || subjectFilter !== "all" || dateRange.from
+                    {orderQuery || studentQuery || subjectFilter !== "all" || dateRange?.from
                       ? "没有符合筛选条件的收藏试卷"
                       : "您还没有收藏任何试卷"
                     }
