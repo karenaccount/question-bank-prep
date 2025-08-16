@@ -12,8 +12,6 @@ import { Calendar as CalendarIcon, Clock, User, Package, BookOpen, GraduationCap
 import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import QuizActions from "@/components/QuizActions";
 
 const QuizList = () => {
@@ -84,8 +82,6 @@ const QuizList = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground">试卷管理</h1>
@@ -306,8 +302,6 @@ const QuizList = () => {
           )}
         </div>
       </div>
-      
-      <Footer />
     </div>
   );
 };

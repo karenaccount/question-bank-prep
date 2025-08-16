@@ -24,8 +24,6 @@ import {
   CheckCircle,
   XCircle
 } from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import QuizActions from "@/components/QuizActions";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
@@ -43,14 +41,12 @@ const QuizDetail = () => {
   if (!quiz) {
     return (
       <div className="min-h-screen bg-background">
-        <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground mb-4">试卷未找到</h1>
             <Button onClick={() => navigate(-1)}>返回</Button>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -147,8 +143,6 @@ const QuizDetail = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
@@ -490,8 +484,6 @@ const QuizDetail = () => {
           </div>
         </div>
       </div>
-      
-      <Footer />
     </div>
   );
 };

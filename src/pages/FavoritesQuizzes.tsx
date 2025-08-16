@@ -30,8 +30,6 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import QuizActions from "@/components/QuizActions";
 
 const FavoritesQuizzes = () => {
@@ -49,8 +47,23 @@ const FavoritesQuizzes = () => {
   // State for dropdown visibility
   const [orderDropdownOpen, setOrderDropdownOpen] = useState(false);
   const [studentDropdownOpen, setStudentDropdownOpen] = useState(false);
+  const [subjectDropdownOpen, setSubjectDropdownOpen] = useState(false);
+  const [knowledgePointDropdownOpen, setKnowledgePointDropdownOpen] = useState(false);
 
   const favoriteQuizzes = user ? getFavoriteQuizzes(user.id) : [];
+
+  // Get unique values for filters
+  const uniqueSubjects = [...new Set(favoriteQuizzes.map(quiz => quiz.course))];
+  const uniqueKnowledgePoints = [...new Set(favoriteQuizzes.flatMap(quiz => quiz.questions.map((question: any) => question.knowledgePoint).filter(Boolean)))];
+  
+  // Filter subjects and knowledge points based on query
+  const filteredSubjects = uniqueSubjects.filter(subject => 
+    subject.toLowerCase().includes((subjectFilter === "all" ? "" : subjectFilter).toLowerCase())
+  );
+  
+  const filteredKnowledgePoints = uniqueKnowledgePoints.filter(kp => 
+    kp.toLowerCase().includes((knowledgePointFilter === "all" ? "" : knowledgePointFilter).toLowerCase())
+  );
 
   // Filter quizzes - only show currently favorited quizzes
   const filteredQuizzes = favoriteQuizzes.filter(quiz => {
@@ -60,17 +73,18 @@ const FavoritesQuizzes = () => {
     
     const matchesOrder = orderQuery === "" || quiz.orderName.toLowerCase().includes(orderQuery.toLowerCase());
     const matchesStudent = studentQuery === "" || quiz.studentName.toLowerCase().includes(studentQuery.toLowerCase());
-    const matchesSubject = subjectFilter === "all" || quiz.course === subjectFilter;
+    const matchesSubject = subjectFilter === "all" || quiz.course.toLowerCase().includes(subjectFilter.toLowerCase());
+    const matchesKnowledgePoint = knowledgePointFilter === "all" || 
+      quiz.questions.some((q: any) => q.knowledgePoint?.toLowerCase().includes(knowledgePointFilter.toLowerCase()));
+    const matchesScenario = scenarioFilter === "all"; // Scenario filtering disabled for now
     
     // Date range filter
     const matchesDate = !dateRange.from || !dateRange.to || 
       (quiz.createdAt >= dateRange.from && quiz.createdAt <= dateRange.to);
     
-    return matchesOrder && matchesStudent && matchesSubject && matchesDate;
+    return matchesOrder && matchesStudent && matchesSubject && matchesKnowledgePoint && matchesScenario && matchesDate;
   });
 
-  // Get unique values for filters
-  const uniqueSubjects = [...new Set(favoriteQuizzes.map(quiz => quiz.course))];
   const uniqueStudents = [...new Set(favoriteQuizzes.map(q => q.studentName))];
   const uniqueOrders = [...new Set(favoriteQuizzes.map(q => q.orderName))];
   
@@ -83,10 +97,6 @@ const FavoritesQuizzes = () => {
   const filteredStudents = uniqueStudents.filter(student => 
     student.toLowerCase().includes(studentQuery.toLowerCase())
   );
-  
-  // Mock data for knowledge points and scenarios - in real app these would come from quiz data
-  const knowledgePoints = ["概率论", "线性代数", "微积分", "数据结构", "算法"];
-  const scenarios = ["期中考试", "期末考试", "随堂测验", "作业练习", "竞赛训练"];
 
   const getStatusBadge = (quiz: any) => {
     if (quiz.isCompleted) {
@@ -100,8 +110,6 @@ const FavoritesQuizzes = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
-      
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
@@ -219,34 +227,64 @@ const FavoritesQuizzes = () => {
                 </div>
               )}
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">知识点</label>
-                <Select value={knowledgePointFilter} onValueChange={setKnowledgePointFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择知识点" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部知识点</SelectItem>
-                    {knowledgePoints.map((point: string) => (
-                      <SelectItem key={point} value={point}>{point}</SelectItem>
+              <div className="relative">
+                <label className="text-sm font-medium mb-2 block">课程</label>
+                <Input
+                  placeholder="输入课程名称..."
+                  value={subjectFilter === "all" ? "" : subjectFilter}
+                  onChange={(e) => {
+                    setSubjectFilter(e.target.value || "all");
+                    setSubjectDropdownOpen(e.target.value.length > 0);
+                  }}
+                  onFocus={() => setSubjectDropdownOpen((subjectFilter !== "all" && subjectFilter.length > 0))}
+                  onBlur={() => setTimeout(() => setSubjectDropdownOpen(false), 200)}
+                />
+                {subjectDropdownOpen && filteredSubjects.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-md max-h-48 overflow-y-auto">
+                    {filteredSubjects.map(subject => (
+                      <div
+                        key={subject}
+                        className="px-3 py-2 hover:bg-accent cursor-pointer text-sm"
+                        onClick={() => {
+                          setSubjectFilter(subject);
+                          setSubjectDropdownOpen(false);
+                        }}
+                      >
+                        {subject}
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                )}
               </div>
               
-              <div>
-                <label className="text-sm font-medium mb-2 block">课程</label>
-                <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择课程" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部课程</SelectItem>
-                    {uniqueSubjects.map((subject: string) => (
-                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+              <div className="relative">
+                <label className="text-sm font-medium mb-2 block">知识点</label>
+                <Input
+                  placeholder="输入知识点..."
+                  value={knowledgePointFilter === "all" ? "" : knowledgePointFilter}
+                  onChange={(e) => {
+                    setKnowledgePointFilter(e.target.value || "all");
+                    setKnowledgePointDropdownOpen(e.target.value.length > 0);
+                  }}
+                  onFocus={() => setKnowledgePointDropdownOpen((knowledgePointFilter !== "all" && knowledgePointFilter.length > 0))}
+                  onBlur={() => setTimeout(() => setKnowledgePointDropdownOpen(false), 200)}
+                />
+                {knowledgePointDropdownOpen && filteredKnowledgePoints.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-md max-h-48 overflow-y-auto">
+                    {filteredKnowledgePoints.map(kp => (
+                      <div
+                        key={kp}
+                        className="px-3 py-2 hover:bg-accent cursor-pointer text-sm"
+                        onClick={() => {
+                          setKnowledgePointFilter(kp);
+                          setKnowledgePointDropdownOpen(false);
+                        }}
+                      >
+                        {kp}
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -257,9 +295,11 @@ const FavoritesQuizzes = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">全部类型</SelectItem>
-                    {scenarios.map((scenario: string) => (
-                      <SelectItem key={scenario} value={scenario}>{scenario}</SelectItem>
-                    ))}
+                    <SelectItem value="Pretest">Pretest</SelectItem>
+                    <SelectItem value="随堂测验">随堂测验</SelectItem>
+                    <SelectItem value="课后作业">课后作业</SelectItem>
+                    <SelectItem value="阶段小测">阶段小测</SelectItem>
+                    <SelectItem value="模拟考试">模拟考试</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -291,16 +331,15 @@ const FavoritesQuizzes = () => {
                   <div className="space-y-4">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <Link 
-                            to={`/quiz/${quiz.id}`}
-                            className="text-lg font-semibold text-foreground hover:text-primary transition-colors cursor-pointer"
-                          >
-                            {quiz.name}
-                          </Link>
-                          {getStatusBadge(quiz)}
-                          <Heart className="h-4 w-4 text-red-500 fill-current" />
-                        </div>
+                         <div className="flex items-center gap-3 mb-2">
+                           <Link 
+                             to={`/quiz/${quiz.id}`}
+                             className="text-lg font-semibold text-foreground hover:text-primary transition-colors cursor-pointer"
+                           >
+                             {quiz.name}
+                           </Link>
+                           <Heart className="h-4 w-4 text-red-500 fill-current" />
+                         </div>
                         
                         <div className="grid grid-cols-2 gap-3 text-sm text-muted-foreground">
                           <div className="flex items-center gap-2">
@@ -361,8 +400,6 @@ const FavoritesQuizzes = () => {
           )}
         </div>
       </div>
-      
-      <Footer />
     </div>
   );
 };
