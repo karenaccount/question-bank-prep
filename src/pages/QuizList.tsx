@@ -10,6 +10,7 @@ import { Calendar, Clock, User, Package, BookOpen, GraduationCap, Zap } from "lu
 import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import QuizActions from "@/components/QuizActions";
 
 const QuizList = () => {
   const { user } = useAuth();
@@ -233,6 +234,7 @@ const QuizList = () => {
                       <Button asChild variant="outline" size="sm">
                         <Link to={`/quiz/${quiz.id}`}>查看详情</Link>
                       </Button>
+                      <QuizActions quiz={quiz} />
                     </div>
                   </div>
                 </CardContent>
