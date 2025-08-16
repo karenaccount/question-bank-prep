@@ -2,46 +2,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Clock, CheckCircle, XCircle, Play } from "lucide-react";
+import { useQuiz } from "@/contexts/QuizContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const StudentDashboard = () => {
-  const papers = [
-    {
-      id: 1,
-      name: "第一单元测试卷",
-      order: "数学基础课程",
-      questions: 15,
-      time: "2小时前",
-      completed: false,
-      score: null
-    },
-    {
-      id: 2,
-      name: "代数运算练习卷",
-      order: "数学基础课程", 
-      questions: 12,
-      time: "1天前",
-      completed: true,
-      score: 88
-    },
-    {
-      id: 3,
-      name: "几何图形测试卷",
-      order: "数学基础课程",
-      questions: 20,
-      time: "3天前",
-      completed: true,
-      score: 92
-    },
-    {
-      id: 4,
-      name: "函数应用练习卷",
-      order: "数学基础课程",
-      questions: 10,
-      time: "5天前",
-      completed: false,
-      score: null
+  const { getQuizzesByStudent } = useQuiz();
+  const { user } = useAuth();
+  
+  // Mock student ID - in real app this would come from user context
+  const studentQuizzes = user ? getQuizzesByStudent('student-1') : [];
+
+  const getTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes}分钟前`;
+    } else if (diffInMinutes < 1440) {
+      return `${Math.floor(diffInMinutes / 60)}小时前`;
+    } else {
+      return `${Math.floor(diffInMinutes / 1440)}天前`;
     }
-  ];
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -54,14 +36,14 @@ const StudentDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {papers.map((paper) => (
-              <Card key={paper.id} className="hover:shadow-md transition-shadow">
+            {studentQuizzes.map((quiz) => (
+              <Card key={quiz.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="space-y-4">
                     {/* 试卷标题和状态 */}
                     <div className="flex items-start justify-between">
-                      <h3 className="font-medium text-lg leading-tight">{paper.name}</h3>
-                      {paper.completed ? (
+                      <h3 className="font-medium text-lg leading-tight">{quiz.name}</h3>
+                      {quiz.isCompleted ? (
                         <Badge variant="default" className="bg-green-100 text-green-800">
                           <CheckCircle className="w-3 h-3 mr-1" />
                           已完成
@@ -76,30 +58,30 @@ const StudentDashboard = () => {
 
                     {/* 试卷信息 */}
                     <div className="space-y-2 text-sm text-muted-foreground">
-                      <p>所属订单：{paper.order}</p>
+                      <p>所属订单：{quiz.orderName}</p>
                       <div className="flex items-center justify-between">
                         <span className="flex items-center gap-1">
                           <FileText className="w-4 h-4" />
-                          {paper.questions}题
+                          {quiz.totalQuestions}题
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="w-4 h-4" />
-                          {paper.time}
+                          {getTimeAgo(quiz.createdAt)}
                         </span>
                       </div>
                     </div>
 
                     {/* 分数显示 */}
-                    {paper.completed && paper.score && (
+                    {quiz.isCompleted && quiz.studentScore && (
                       <div className="text-center py-2">
-                        <div className="text-2xl font-bold text-primary">{paper.score}分</div>
+                        <div className="text-2xl font-bold text-primary">{quiz.studentScore}分</div>
                         <div className="text-sm text-muted-foreground">本次得分</div>
                       </div>
                     )}
 
                     {/* 操作按钮 */}
                     <div className="pt-2">
-                      {paper.completed ? (
+                      {quiz.isCompleted ? (
                         <Button variant="outline" className="w-full">
                           查看详情
                         </Button>
@@ -117,7 +99,7 @@ const StudentDashboard = () => {
           </div>
 
           {/* 空状态 */}
-          {papers.length === 0 && (
+          {studentQuizzes.length === 0 && (
             <div className="text-center py-12">
               <FileText className="w-16 h-16 mx-auto mb-4 text-muted-foreground/50" />
               <h3 className="text-lg font-medium mb-2">暂无试卷</h3>

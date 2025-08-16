@@ -9,8 +9,12 @@ import FastQuizMode from "./FastQuizMode";
 import DetailedQuizMode from "./DetailedQuizMode";
 import QuizGeneration from "./QuizGeneration";
 import QuizEditor from "./QuizEditor";
+import { useQuiz } from "@/contexts/QuizContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TeacherDashboard = () => {
+  const { saveQuiz, getQuizzesByTeacher } = useQuiz();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -18,6 +22,8 @@ const TeacherDashboard = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [quizConfig, setQuizConfig] = useState<any>(null);
   const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
+  
+  const teacherQuizzes = user ? getQuizzesByTeacher(user.id) : [];
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -62,8 +68,19 @@ const TeacherDashboard = () => {
   };
 
   const handleSaveQuiz = (quizName: string, questions: any[]) => {
-    console.log('Saving quiz:', { name: quizName, questions, order: selectedOrder });
-    // TODO: Implement actual save functionality
+    if (selectedOrder && user) {
+      saveQuiz({
+        name: quizName,
+        orderName: selectedOrder.name,
+        studentName: selectedOrder.student,
+        course: selectedOrder.course,
+        questions,
+        totalQuestions: questions.length,
+        totalScore: questions.reduce((sum, q) => sum + (q.score || 0), 0),
+        createdBy: user.id,
+        assignedTo: 'student-1', // Mock student ID - should be from selectedOrder
+      });
+    }
     setMode('selection');
     setSelectedOrder(null);
     setQuizConfig(null);
@@ -286,16 +303,37 @@ const TeacherDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="border rounded-lg p-3">
-                    <h4 className="font-medium text-sm">第{i}单元测试卷</h4>
-                    <p className="text-xs text-muted-foreground">订单：张同学数学辅导</p>
-                    <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-                      <span>10题</span>
-                      <span>1小时前</span>
+                {teacherQuizzes.slice(0, 3).map((quiz) => (
+                  <div key={quiz.id} className="border rounded-lg p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-medium text-sm">{quiz.name}</h4>
+                      {quiz.isCompleted ? (
+                        <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
+                          已完成
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="text-xs">
+                          未完成
+                        </Badge>
+                      )}
                     </div>
+                    <p className="text-xs text-muted-foreground mb-2">订单：{quiz.orderName}</p>
+                    <div className="flex justify-between items-center text-xs text-muted-foreground">
+                      <span>{quiz.totalQuestions}题</span>
+                      <span>{new Date(quiz.createdAt).toLocaleDateString()}</span>
+                    </div>
+                    {quiz.isCompleted && quiz.studentScore && (
+                      <div className="mt-2 text-xs">
+                        <span className="text-primary font-medium">得分：{quiz.studentScore}分</span>
+                      </div>
+                    )}
                   </div>
                 ))}
+                {teacherQuizzes.length === 0 && (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground">暂无试卷</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
