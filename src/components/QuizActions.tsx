@@ -40,9 +40,10 @@ interface QuizActionsProps {
   onEdit?: () => void;
   compact?: boolean; // For homepage use
   iconOnly?: boolean; // For list view with icon-only buttons
+  isFromFavorites?: boolean; // Explicitly pass this prop
 }
 
-const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizActionsProps) => {
+const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false, isFromFavorites = false }: QuizActionsProps) => {
   const { user } = useAuth();
   const { deleteQuiz, toggleFavorite, addToWrongAnswers } = useQuiz();
   const { toast } = useToast();
@@ -57,7 +58,7 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
   const canAnswer = isStudent && (!quiz.isCompleted || quiz.studentScore === undefined);
   
   // Check if this quiz is from favorites page
-  const isFromFavorites = window.location.pathname === '/favorites';
+  const shouldShowLimitedActions = isFromFavorites || window.location.pathname === '/favorites';
 
   const handleEdit = () => {
     if (onEdit) {
@@ -102,7 +103,7 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
   if (isTeacher) {
     if (iconOnly) {
       // Icon-only view for list pages
-      const showLimitedActions = isFromFavorites;
+      const showLimitedActions = shouldShowLimitedActions;
       
       return (
         <>
@@ -206,7 +207,7 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
             onOpenChange={setShowAddToOrderDialog}
             quiz={quiz}
           />
-          {!isFromFavorites && (
+          {!shouldShowLimitedActions && (
             <ShareQuizDialog 
               open={showShareDialog}
               onOpenChange={setShowShareDialog}
@@ -312,7 +313,7 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
             )}
           </Button>
           
-          {!isFromFavorites && (
+          {!shouldShowLimitedActions && (
             <>
               <Button 
                 variant="outline" 
@@ -358,7 +359,7 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
             </>
           )}
           
-          {isFromFavorites && (
+          {shouldShowLimitedActions && (
             <Button 
               variant="outline" 
               size="sm" 
@@ -403,7 +404,7 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
         />
 
         {/* Share Quiz Dialog */}
-        {!isFromFavorites && (
+        {!shouldShowLimitedActions && (
           <ShareQuizDialog 
             open={showShareDialog}
             onOpenChange={setShowShareDialog}

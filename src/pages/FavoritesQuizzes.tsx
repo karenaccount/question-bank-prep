@@ -340,7 +340,7 @@ const FavoritesQuizzes = () => {
                       </div>
                       
                       <div className="ml-4">
-                        <QuizActions quiz={quiz} iconOnly />
+                        <QuizActions quiz={quiz} iconOnly isFromFavorites />
                       </div>
                     </div>
                   </div>
