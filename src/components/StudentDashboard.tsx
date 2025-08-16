@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
-import { FileText, Clock, CheckCircle, XCircle, Play, Package, BookOpen, GraduationCap, Zap, AlertCircle, Calendar, Trash2 } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, Play, Package, BookOpen, GraduationCap, Zap, AlertCircle, Calendar, Trash2, BarChart3, Search, Users, Brain } from "lucide-react";
 import QuizActions from "./QuizActions";
 import { useQuiz } from "@/contexts/QuizContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +18,52 @@ const StudentDashboard = () => {
   // Mock student ID - in real app this would come from user context
   const studentQuizzes = user ? getQuizzesByStudent('student-1') : [];
   const userWrongAnswers = wrongAnswers.filter(item => item.userId === user?.id);
+  
+  // 统计功能状态
+  const [statsDimension, setStatsDimension] = useState<'student' | 'order' | 'knowledge'>('student');
+  const [selectedOrderForStats, setSelectedOrderForStats] = useState<string>('');
+  const [orderSearchQuery, setOrderSearchQuery] = useState('');
+  
+  // 获取所有订单
+  const allOrders = Array.from(new Set(studentQuizzes.map(quiz => quiz.orderName)));
+  const filteredOrders = allOrders.filter(order => 
+    order.toLowerCase().includes(orderSearchQuery.toLowerCase())
+  );
+  
+  // 计算订单统计数据
+  const getOrderStats = (orderName: string) => {
+    const orderQuizzes = studentQuizzes.filter(quiz => quiz.orderName === orderName);
+    const completedQuizzes = orderQuizzes.filter(quiz => quiz.isCompleted);
+    const totalQuizzes = orderQuizzes.length;
+    const completionRate = totalQuizzes > 0 ? Math.round((completedQuizzes.length / totalQuizzes) * 100) : 0;
+    
+    // 计算平均正确率
+    const totalCorrectQuestions = completedQuizzes.reduce((sum, quiz) => {
+      if (quiz.studentScore && quiz.totalScore) {
+        return sum + (quiz.studentScore / quiz.totalScore) * quiz.totalQuestions;
+      }
+      return sum;
+    }, 0);
+    const totalQuestions = completedQuizzes.reduce((sum, quiz) => sum + quiz.totalQuestions, 0);
+    const averageAccuracy = totalQuestions > 0 ? Math.round((totalCorrectQuestions / totalQuestions) * 100) : 0;
+    
+    // 计算薄弱知识点（模拟数据）
+    const weakKnowledgePoints = [
+      { name: '函数与方程', errorRate: 42 },
+      { name: '几何图形', errorRate: 35 },
+      { name: '数据分析', errorRate: 30 },
+      { name: '概率统计', errorRate: 25 },
+      { name: '代数运算', errorRate: 22 }
+    ].slice(0, 5);
+    
+    return {
+      completedQuizzes: completedQuizzes.length,
+      totalQuizzes,
+      completionRate,
+      averageAccuracy,
+      weakKnowledgePoints
+    };
+  };
 
   const getTimeAgo = (date: Date) => {
     const now = new Date();
@@ -222,6 +272,198 @@ const StudentDashboard = () => {
               </div>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* 答题统计 */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="w-6 h-6" />
+            答题统计
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs value={statsDimension} onValueChange={(value) => setStatsDimension(value as any)}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="student" className="flex items-center gap-1">
+                <Users className="w-3 h-3" />
+                按学生
+              </TabsTrigger>
+              <TabsTrigger value="order" className="flex items-center gap-1">
+                <Package className="w-3 h-3" />
+                按订单
+              </TabsTrigger>
+              <TabsTrigger value="knowledge" className="flex items-center gap-1">
+                <Brain className="w-3 h-3" />
+                按知识点
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="student" className="space-y-4 mt-4">
+              <div className="space-y-4">
+                <div className="text-center border-b pb-2">
+                  <h4 className="font-medium text-sm">我的答题统计</h4>
+                </div>
+                
+                {/* 完成率 */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">完成率</span>
+                    <span className="font-medium">
+                      {studentQuizzes.length > 0 ? Math.round((studentQuizzes.filter(q => q.isCompleted).length / studentQuizzes.length) * 100) : 0}%
+                    </span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    已完成 {studentQuizzes.filter(q => q.isCompleted).length} / {studentQuizzes.length} 份试卷
+                  </div>
+                </div>
+                
+                {/* 正确率 */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">平均正确率</span>
+                    <span className="font-medium text-green-600">85%</span>
+                  </div>
+                </div>
+                
+                {/* 薄弱知识点 */}
+                <div className="space-y-2">
+                  <h5 className="text-sm font-medium">薄弱知识点 (错误率最高)</h5>
+                  <div className="space-y-1">
+                    {[
+                      { name: '函数与方程', errorRate: 45 },
+                      { name: '几何图形', errorRate: 38 },
+                      { name: '数据分析', errorRate: 32 },
+                      { name: '概率统计', errorRate: 28 },
+                      { name: '代数运算', errorRate: 25 }
+                    ].map((point, index) => (
+                      <div key={index} className="flex justify-between items-center text-xs">
+                        <span className="text-muted-foreground">{point.name}</span>
+                        <Badge variant="destructive" className="text-xs">
+                          {point.errorRate}%
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="order" className="space-y-4 mt-4">
+              {/* 订单搜索 */}
+              <div className="relative">
+                <Input
+                  placeholder="搜索订单号"
+                  value={orderSearchQuery}
+                  onChange={(e) => setOrderSearchQuery(e.target.value)}
+                  className="pr-8"
+                />
+                <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              </div>
+              
+              {/* 订单选择 */}
+              {filteredOrders.length > 0 && (
+                <Select value={selectedOrderForStats} onValueChange={setSelectedOrderForStats}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择订单" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredOrders.map((order) => (
+                      <SelectItem key={order} value={order}>
+                        {order}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              
+              {/* 订单统计数据 */}
+              {selectedOrderForStats && (() => {
+                const stats = getOrderStats(selectedOrderForStats);
+                return (
+                  <div className="space-y-4">
+                    <div className="text-center border-b pb-2">
+                      <h4 className="font-medium text-sm">{selectedOrderForStats} 的答题统计</h4>
+                    </div>
+                    
+                    {/* 完成率 */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">完成率</span>
+                        <span className="font-medium">{stats.completionRate}%</span>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        已完成 {stats.completedQuizzes} / {stats.totalQuizzes} 份试卷
+                      </div>
+                    </div>
+                    
+                    {/* 正确率 */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">平均正确率</span>
+                        <span className="font-medium text-green-600">{stats.averageAccuracy}%</span>
+                      </div>
+                    </div>
+                    
+                    {/* 薄弱知识点 */}
+                    <div className="space-y-2">
+                      <h5 className="text-sm font-medium">薄弱知识点 (错误率最高)</h5>
+                      <div className="space-y-1">
+                        {stats.weakKnowledgePoints.map((point, index) => (
+                          <div key={index} className="flex justify-between items-center text-xs">
+                            <span className="text-muted-foreground">{point.name}</span>
+                            <Badge variant="destructive" className="text-xs">
+                              {point.errorRate}%
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+              
+              {!selectedOrderForStats && (
+                <div className="text-center py-4">
+                  <Package className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+                  <p className="text-sm text-muted-foreground">请选择订单查看统计</p>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="knowledge" className="space-y-4 mt-4">
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">函数与方程</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500" style={{ width: '78%' }}></div>
+                    </div>
+                    <span className="text-xs font-medium">78%</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">几何图形</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
+                      <div className="h-full bg-yellow-500" style={{ width: '65%' }}></div>
+                    </div>
+                    <span className="text-xs font-medium">65%</span>
+                  </div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">数据分析</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
+                      <div className="h-full bg-orange-500" style={{ width: '58%' }}></div>
+                    </div>
+                    <span className="text-xs font-medium">58%</span>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
