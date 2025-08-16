@@ -5,98 +5,109 @@ export const MOCK_TEACHER_ID = 'teacher-1';
 export const MOCK_STUDENT_ID = 'student-1';
 export const MOCK_STUDENT_2_ID = 'student-2';
 
-// Sample questions for different subjects
-const mathQuestions = [
+// Sample questions for different subjects suitable for university/graduate students
+const computerScienceQuestions = [
   {
     id: 'q1',
-    question: '解方程：2x + 5 = 13',
-    options: ['x = 4', 'x = 3', 'x = 5', 'x = 6'],
-    correctAnswer: 'x = 4',
-    explanation: '2x = 13 - 5 = 8，所以 x = 4',
+    question: 'What is the time complexity of binary search algorithm?',
+    options: ['O(n)', 'O(log n)', 'O(n²)', 'O(1)'],
+    correctAnswer: 'O(log n)',
+    explanation: 'Binary search divides the search space in half with each iteration',
     score: 10
   },
   {
     id: 'q2',
-    question: '计算：3² + 4² = ?',
-    options: ['25', '24', '26', '23'],
-    correctAnswer: '25',
-    explanation: '3² + 4² = 9 + 16 = 25',
+    question: 'Which data structure uses LIFO (Last In, First Out) principle?',
+    options: ['Queue', 'Stack', 'Array', 'Linked List'],
+    correctAnswer: 'Stack',
+    explanation: 'Stack follows LIFO principle where the last element added is the first to be removed',
     score: 10
   },
   {
     id: 'q3',
-    question: '下列哪个是质数？',
-    options: ['9', '15', '17', '21'],
-    correctAnswer: '17',
-    explanation: '17只能被1和17整除，是质数',
-    score: 10
+    question: 'In object-oriented programming, what does polymorphism refer to?',
+    options: ['Data hiding', 'Code reusability', 'Multiple forms of a method', 'Class inheritance'],
+    correctAnswer: 'Multiple forms of a method',
+    explanation: 'Polymorphism allows objects of different types to be treated as instances of the same type',
+    score: 15
   }
 ];
 
-const chineseQuestions = [
+const businessQuestions = [
   {
     id: 'q4',
-    question: '下列词语中，字音完全正确的是：',
-    options: ['载(zǎi)重', '模(mó)样', '处(chǔ)理', '角(jiǎo)色'],
-    correctAnswer: '角(jiǎo)色',
-    explanation: '角色读作jiǎo sè',
+    question: 'What does ROI stand for in business analysis?',
+    options: ['Return on Investment', 'Rate of Interest', 'Revenue of Income', 'Risk of Investment'],
+    correctAnswer: 'Return on Investment',
+    explanation: 'ROI measures the efficiency of an investment',
     score: 8
   },
   {
     id: 'q5',
-    question: '"春风又绿江南岸"中的"绿"字用得好，好在哪里？',
-    options: ['写出了春天的颜色', '表现了春风的力量', '体现了诗人的想象', '以上都对'],
-    correctAnswer: '以上都对',
-    explanation: '"绿"字既写出春天的颜色，又表现春风的神奇力量',
+    question: 'In the SWOT analysis framework, what does the "T" represent?',
+    options: ['Technology', 'Threats', 'Trends', 'Targets'],
+    correctAnswer: 'Threats',
+    explanation: 'SWOT stands for Strengths, Weaknesses, Opportunities, and Threats',
     score: 12
   }
 ];
 
-const englishQuestions = [
+const statisticsQuestions = [
   {
     id: 'q6',
-    question: 'Choose the correct form: I _____ to school every day.',
-    options: ['go', 'goes', 'going', 'went'],
-    correctAnswer: 'go',
-    explanation: 'Use present simple tense with "I"',
-    score: 5
+    question: 'What is the central limit theorem?',
+    options: ['Sample means approach normal distribution', 'All data is normally distributed', 'Variance equals mean', 'Standard deviation is constant'],
+    correctAnswer: 'Sample means approach normal distribution',
+    explanation: 'CLT states that sample means will be normally distributed regardless of population distribution',
+    score: 15
   },
   {
     id: 'q7',
-    question: 'What is the past tense of "write"?',
-    options: ['wrote', 'written', 'writing', 'writes'],
-    correctAnswer: 'wrote',
-    explanation: 'The past tense of "write" is "wrote"',
-    score: 5
+    question: 'What is a Type I error in hypothesis testing?',
+    options: ['Accepting false null hypothesis', 'Rejecting true null hypothesis', 'Incorrect sample size', 'Wrong test statistic'],
+    correctAnswer: 'Rejecting true null hypothesis',
+    explanation: 'Type I error occurs when we reject a null hypothesis that is actually true',
+    score: 12
+  }
+];
+
+const researchMethodsQuestions = [
+  {
+    id: 'q8',
+    question: 'What is the main difference between qualitative and quantitative research?',
+    options: ['Sample size', 'Data type and analysis method', 'Research duration', 'Cost'],
+    correctAnswer: 'Data type and analysis method',
+    explanation: 'Qualitative focuses on non-numerical data while quantitative uses numerical data',
+    score: 10
   }
 ];
 
 export const testQuizzes: Quiz[] = [
-  // Teacher created quizzes - some completed, some not
+  // Teacher created quizzes for university/graduate students
   {
     id: 'quiz-1',
-    name: '数学基础测试',
-    orderName: '七年级数学摸底',
-    studentName: '张小明',
-    course: '数学',
-    questions: mathQuestions,
+    name: 'Computer Science Fundamentals',
+    orderName: 'CS101 Midterm Review',
+    studentName: 'Alex Johnson',
+    course: 'Computer Science',
+    questions: computerScienceQuestions,
     totalQuestions: 3,
-    totalScore: 30,
+    totalScore: 35,
     createdAt: new Date('2024-01-15'),
     createdBy: MOCK_TEACHER_ID,
     assignedTo: MOCK_STUDENT_ID,
     isCompleted: true,
-    studentScore: 25,
+    studentScore: 30,
     completedAt: new Date('2024-01-16'),
     isFavorite: false
   },
   {
     id: 'quiz-2',
-    name: '语文阅读理解',
-    orderName: '八年级语文练习',
-    studentName: '李小红',
-    course: '语文',
-    questions: chineseQuestions,
+    name: 'Business Administration Quiz',
+    orderName: 'MBA Strategic Management',
+    studentName: 'Maria Garcia',
+    course: 'Business Administration',
+    questions: businessQuestions,
     totalQuestions: 2,
     totalScore: 20,
     createdAt: new Date('2024-01-20'),
@@ -107,47 +118,40 @@ export const testQuizzes: Quiz[] = [
   },
   {
     id: 'quiz-3',
-    name: '英语语法练习',
-    orderName: '初一英语基础',
-    studentName: '张小明',
-    course: '英语',
-    questions: englishQuestions,
+    name: 'Statistics & Data Analysis',
+    orderName: 'STAT 501 Hypothesis Testing',
+    studentName: 'Alex Johnson',
+    course: 'Statistics',
+    questions: statisticsQuestions,
     totalQuestions: 2,
-    totalScore: 10,
+    totalScore: 27,
     createdAt: new Date('2024-01-25'),
     createdBy: MOCK_TEACHER_ID,
     assignedTo: MOCK_STUDENT_ID,
     isCompleted: true,
-    studentScore: 8,
+    studentScore: 22,
     completedAt: new Date('2024-01-26'),
     isFavorite: true
   },
   {
     id: 'quiz-4',
-    name: '数学进阶练习',
-    orderName: '七年级数学提高',
-    studentName: '李小红',
-    course: '数学',
+    name: 'Research Methods Assessment',
+    orderName: 'Graduate Research Methodology',
+    studentName: 'Maria Garcia',
+    course: 'Research Methods',
     questions: [
-      {
-        id: 'q8',
-        question: '一元二次方程 x² - 5x + 6 = 0 的解是：',
-        options: ['x = 2 或 x = 3', 'x = 1 或 x = 6', 'x = -2 或 x = -3', 'x = 0 或 x = 5'],
-        correctAnswer: 'x = 2 或 x = 3',
-        explanation: '因式分解：(x-2)(x-3) = 0',
-        score: 15
-      },
+      ...researchMethodsQuestions,
       {
         id: 'q9',
-        question: '函数 y = 2x + 1 的图像经过点：',
-        options: ['(0, 1)', '(1, 0)', '(0, 2)', '(1, 1)'],
-        correctAnswer: '(0, 1)',
-        explanation: '当x=0时，y=2×0+1=1，所以经过(0,1)',
+        question: 'What is the purpose of a literature review in research?',
+        options: ['To copy previous work', 'To identify research gaps', 'To avoid reading', 'To fill pages'],
+        correctAnswer: 'To identify research gaps',
+        explanation: 'Literature review helps identify what has been studied and what gaps exist',
         score: 15
       }
     ],
     totalQuestions: 2,
-    totalScore: 30,
+    totalScore: 25,
     createdAt: new Date('2024-02-01'),
     createdBy: MOCK_TEACHER_ID,
     assignedTo: MOCK_STUDENT_2_ID,
@@ -156,13 +160,13 @@ export const testQuizzes: Quiz[] = [
   },
   {
     id: 'quiz-5',
-    name: '期中综合测试',
-    orderName: '八年级期中考试',
-    studentName: '张小明',
-    course: '综合',
-    questions: [...mathQuestions.slice(0, 2), ...chineseQuestions.slice(0, 1)],
+    name: 'Comprehensive Assessment',
+    orderName: 'Interdisciplinary Final Exam',
+    studentName: 'Alex Johnson',
+    course: 'Interdisciplinary Studies',
+    questions: [...computerScienceQuestions.slice(0, 2), ...businessQuestions.slice(0, 1)],
     totalQuestions: 3,
-    totalScore: 28,
+    totalScore: 32,
     createdAt: new Date('2024-02-10'),
     createdBy: MOCK_TEACHER_ID,
     assignedTo: MOCK_STUDENT_ID,
