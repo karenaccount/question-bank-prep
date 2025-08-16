@@ -36,6 +36,7 @@ const QuizList = () => {
   console.log('Current user:', user);
   console.log('All quizzes:', quizzes);
   console.log('User quizzes:', userQuizzes);
+  console.log('Date range:', dateRange);
 
   const getStatusBadge = (quiz: any) => {
     if (quiz.isCompleted) {
@@ -62,6 +63,7 @@ const QuizList = () => {
     // Date range filter
     let matchesDate = true;
     if (dateRange?.from || dateRange?.to) {
+      // Handle both Date objects and serialized date objects
       const quizDate = new Date(quiz.createdAt);
       quizDate.setHours(0, 0, 0, 0); // Set to start of day for comparison
       

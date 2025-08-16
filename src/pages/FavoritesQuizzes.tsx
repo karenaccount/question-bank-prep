@@ -80,6 +80,7 @@ const FavoritesQuizzes = () => {
     // Date range filter
     let matchesDate = true;
     if (dateRange?.from || dateRange?.to) {
+      // Handle both Date objects and serialized date objects
       const quizDate = new Date(quiz.createdAt);
       quizDate.setHours(0, 0, 0, 0); // Set to start of day for comparison
       
