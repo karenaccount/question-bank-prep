@@ -61,7 +61,15 @@ interface QuizProviderProps {
 }
 
 export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>(() => {
+    // Initialize with test data
+    try {
+      const { testQuizzes } = require('@/data/testQuizzes');
+      return testQuizzes;
+    } catch {
+      return [];
+    }
+  });
   const [wrongAnswers, setWrongAnswers] = useState<WrongAnswer[]>([]);
 
   const saveQuiz = (quizData: Omit<Quiz, 'id' | 'createdAt' | 'isCompleted'>) => {
