@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Search, Plus, FileText, Clock, BarChart3, CheckCircle } from "lucide-react";
+import { Search, Plus, FileText, Clock, BarChart3, CheckCircle, User, Package, BookOpen, GraduationCap, Zap } from "lucide-react";
 import { mockOrders, Order } from "@/data/mockOrders";
 import FastQuizMode from "./FastQuizMode";
 import DetailedQuizMode from "./DetailedQuizMode";
@@ -305,32 +305,72 @@ const TeacherDashboard = () => {
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {teacherQuizzes.slice(0, 3).map((quiz) => (
-                  <div key={quiz.id} className="border rounded-lg p-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className="font-medium text-sm">{quiz.name}</h4>
-                      {quiz.isCompleted ? (
-                        <Badge variant="default" className="bg-green-100 text-green-800 text-xs">
-                          已完成
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs">
-                          未完成
-                        </Badge>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-2">订单：{quiz.orderName}</p>
-                    <div className="flex justify-between items-center text-xs text-muted-foreground">
-                      <span>{quiz.totalQuestions}题</span>
-                      <span>{new Date(quiz.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    {quiz.isCompleted && quiz.studentScore && (
-                      <div className="mt-2 text-xs">
-                        <span className="text-primary font-medium">得分：{quiz.studentScore}分</span>
+                  <Card key={quiz.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-sm font-semibold text-foreground">{quiz.name}</h3>
+                            {quiz.isCompleted ? (
+                              <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">已答题</Badge>
+                            ) : quiz.studentScore !== undefined ? (
+                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">答题中</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs">未答题</Badge>
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span>{quiz.createdAt.toLocaleDateString()}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              <span>{quiz.studentName}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              <Package className="h-3 w-3" />
+                              <span>{quiz.orderName}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              <BookOpen className="h-3 w-3" />
+                              <span>{quiz.course}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              <GraduationCap className="h-3 w-3" />
+                              <span>{quiz.totalQuestions}题</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              <Zap className="h-3 w-3" />
+                              <span>{quiz.totalScore}分</span>
+                            </div>
+                          </div>
+                          
+                          {quiz.isCompleted && quiz.studentScore !== undefined && (
+                            <div className="mt-2 text-xs">
+                              <span className="text-green-600 font-medium">
+                                学生得分: {quiz.studentScore}/{quiz.totalScore}分
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="ml-2">
+                          <Button asChild variant="outline" size="sm" className="text-xs h-7">
+                            <Link to={`/quiz/${quiz.id}`}>查看详情</Link>
+                          </Button>
+                        </div>
                       </div>
-                    )}
-                  </div>
+                    </CardContent>
+                  </Card>
                 ))}
                 {teacherQuizzes.length === 0 && (
                   <div className="text-center py-4">

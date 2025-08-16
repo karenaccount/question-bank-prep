@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { FileText, Clock, CheckCircle, XCircle, Play } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, Play, Package, BookOpen, GraduationCap, Zap } from "lucide-react";
 import { useQuiz } from "@/contexts/QuizContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -41,58 +41,66 @@ const StudentDashboard = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-4">
             {studentQuizzes.map((quiz) => (
               <Card key={quiz.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
-                  <div className="space-y-4">
-                    {/* 试卷标题和状态 */}
-                    <div className="flex items-start justify-between">
-                      <h3 className="font-medium text-lg leading-tight">{quiz.name}</h3>
-                      {quiz.isCompleted ? (
-                        <Badge variant="default" className="bg-green-100 text-green-800">
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          已完成
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">
-                          <XCircle className="w-3 h-3 mr-1" />
-                          未完成
-                        </Badge>
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-semibold text-foreground">{quiz.name}</h3>
+                        {quiz.isCompleted ? (
+                          <Badge variant="secondary" className="bg-green-100 text-green-800">已答题</Badge>
+                        ) : quiz.studentScore !== undefined ? (
+                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">答题中</Badge>
+                        ) : (
+                          <Badge variant="outline">未答题</Badge>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span>{quiz.createdAt.toLocaleDateString()}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Package className="h-4 w-4" />
+                          <span>{quiz.orderName}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4" />
+                          <span>{quiz.course}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <GraduationCap className="h-4 w-4" />
+                          <span>{quiz.totalQuestions}题</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-4 w-4" />
+                          <span>总分: {quiz.totalScore}分</span>
+                        </div>
+                      </div>
+                      
+                      {quiz.isCompleted && quiz.studentScore !== undefined && (
+                        <div className="mt-3 text-sm">
+                          <span className="text-green-600 font-medium">
+                            学生得分: {quiz.studentScore}/{quiz.totalScore}分
+                          </span>
+                        </div>
                       )}
                     </div>
-
-                    {/* 试卷信息 */}
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      <p>所属订单：{quiz.orderName}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-1">
-                          <FileText className="w-4 h-4" />
-                          {quiz.totalQuestions}题
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          {getTimeAgo(quiz.createdAt)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 分数显示 */}
-                    {quiz.isCompleted && quiz.studentScore && (
-                      <div className="text-center py-2">
-                        <div className="text-2xl font-bold text-primary">{quiz.studentScore}分</div>
-                        <div className="text-sm text-muted-foreground">本次得分</div>
-                      </div>
-                    )}
-
-                    {/* 操作按钮 */}
-                    <div className="pt-2">
+                    
+                    <div className="flex gap-2 ml-4">
                       {quiz.isCompleted ? (
-                        <Button variant="outline" className="w-full" asChild>
+                        <Button asChild variant="outline" size="sm">
                           <Link to={`/quiz/${quiz.id}`}>查看详情</Link>
                         </Button>
                       ) : (
-                        <Button className="w-full gap-2" asChild>
+                        <Button asChild size="sm" className="gap-2">
                           <Link to={`/quiz/${quiz.id}`}>
                             <Play className="w-4 h-4" />
                             开始答题
