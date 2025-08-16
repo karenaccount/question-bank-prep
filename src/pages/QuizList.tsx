@@ -102,7 +102,7 @@ const QuizList = () => {
             <CardTitle className="text-lg">筛选条件</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="relative">
                 <label className="text-sm font-medium mb-2 block">订单号</label>
                 <Input
@@ -161,10 +161,11 @@ const QuizList = () => {
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="range"
-                      selected={{from: dateRange.from, to: dateRange.to}}
+                      selected={dateRange.from && dateRange.to ? {from: dateRange.from, to: dateRange.to} : undefined}
                       onSelect={(range) => setDateRange(range || {})}
                       numberOfMonths={2}
                       initialFocus
+                      className={cn("p-3 pointer-events-auto")}
                     />
                   </PopoverContent>
                 </Popover>
