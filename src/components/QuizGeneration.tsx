@@ -60,27 +60,27 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
     if (currentStep < generationSteps.length && !isCompleted) {
       const step = generationSteps[currentStep];
       
+      // For the last step, don't use timer-based progress, wait for typewriter
+      if (currentStep === generationSteps.length - 1) {
+        // Start typewriter effect immediately when entering the last step
+        setTimeout(() => {
+          startTypewriterEffect();
+        }, 500);
+        return;
+      }
+      
       const interval = setInterval(() => {
         setProgress(prev => {
           const newProgress = prev + (100 / (step.duration / 100));
           if (newProgress >= 100) {
             clearInterval(interval);
-            
-            // Mark current step as completed
             setCompletedSteps(prev => [...prev, step.id]);
             
-            // If this is the last step, start typewriter effect
-            if (currentStep === generationSteps.length - 1) {
-              setTimeout(() => {
-                startTypewriterEffect();
-              }, 500);
-            } else {
-              // Move to next step
-              setTimeout(() => {
-                setCurrentStep(prev => prev + 1);
-                setProgress(0);
-              }, 500);
-            }
+            // Move to next step
+            setTimeout(() => {
+              setCurrentStep(prev => prev + 1);
+              setProgress(0);
+            }, 500);
           }
           return Math.min(newProgress, 100);
         });
@@ -108,9 +108,15 @@ D. 函数必须是线性的
     const typeInterval = setInterval(() => {
       if (index < content.length) {
         setGeneratedContent(content.substring(0, index + 1));
+        // Update progress based on typewriter progress
+        const typeProgress = (index / content.length) * 100;
+        setProgress(typeProgress);
         index++;
       } else {
         clearInterval(typeInterval);
+        // Mark step as completed and finish
+        setCompletedSteps(prev => [...prev, generationSteps[generationSteps.length - 1].id]);
+        setProgress(100);
         setIsCompleted(true);
         
         setTimeout(() => {
@@ -161,10 +167,9 @@ D. 函数必须是线性的
     ];
   };
 
-  const overallProgress = isCompleted 
+  const overallProgress = currentStep === generationSteps.length - 1 && completedSteps.includes(generationSteps[currentStep].id) 
     ? 100 
-    : (completedSteps.length / generationSteps.length) * 100 + 
-      (progress / generationSteps.length);
+    : ((currentStep + progress / 100) / generationSteps.length) * 100;
 
   return (
     <div className="container mx-auto px-4 py-8">
