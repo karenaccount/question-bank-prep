@@ -31,9 +31,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
 
   const login = async (email: string, password: string, role: 'student' | 'teacher') => {
-    // 模拟登录，先不连接后端
+    // 模拟登录，使用与测试数据匹配的用户ID
     const mockUser: User = {
-      id: '1',
+      id: role === 'teacher' ? 'teacher-1' : 'student-1',
       email,
       role,
     };
