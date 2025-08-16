@@ -60,35 +60,42 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
     if (currentStep < generationSteps.length && !isCompleted) {
       const step = generationSteps[currentStep];
       
-      // For the last step, don't use timer-based progress, wait for typewriter
-      if (currentStep === generationSteps.length - 1) {
-        // Start typewriter effect immediately when entering the last step
+      // For steps 1 and 2, use normal timer-based progress
+      if (currentStep < 2) {
+        const interval = setInterval(() => {
+          setProgress(prev => {
+            const newProgress = prev + (100 / (step.duration / 100));
+            if (newProgress >= 100) {
+              clearInterval(interval);
+              setCompletedSteps(prev => [...prev, step.id]);
+              
+              // Move to next step
+              setTimeout(() => {
+                setCurrentStep(prev => prev + 1);
+                setProgress(0);
+              }, 500);
+            }
+            return Math.min(newProgress, 100);
+          });
+        }, 100);
+
+        return () => clearInterval(interval);
+      }
+      
+      // For step 3 (last step), complete step 2 first if not already completed
+      if (currentStep === 2) {
+        if (!completedSteps.includes(generationSteps[1].id)) {
+          // Complete step 2 immediately
+          setCompletedSteps(prev => [...prev, generationSteps[1].id]);
+        }
+        
+        // Start typewriter effect after step 2 is completed
         setTimeout(() => {
           startTypewriterEffect();
         }, 500);
-        return;
       }
-      
-      const interval = setInterval(() => {
-        setProgress(prev => {
-          const newProgress = prev + (100 / (step.duration / 100));
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            setCompletedSteps(prev => [...prev, step.id]);
-            
-            // Move to next step
-            setTimeout(() => {
-              setCurrentStep(prev => prev + 1);
-              setProgress(0);
-            }, 500);
-          }
-          return Math.min(newProgress, 100);
-        });
-      }, 100);
-
-      return () => clearInterval(interval);
     }
-  }, [currentStep, isCompleted]);
+  }, [currentStep, isCompleted, completedSteps]);
 
   const startTypewriterEffect = () => {
     setIsTypewriting(true);
