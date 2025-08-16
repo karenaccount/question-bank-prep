@@ -310,7 +310,7 @@ const TeacherDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {user ? getFavoriteQuizzes(user.id).slice(0, 3).map((quiz) => (
+                {user && getFavoriteQuizzes(user.id).filter(quiz => quiz.isFavorite).slice(0, 3).map((quiz) => (
                   <Card key={quiz.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
@@ -359,8 +359,8 @@ const TeacherDashboard = () => {
                       </div>
                     </CardContent>
                   </Card>
-                )) : []}
-                {(!user || getFavoriteQuizzes(user.id).length === 0) && (
+                ))}
+                {(!user || getFavoriteQuizzes(user.id).filter(quiz => quiz.isFavorite).length === 0) && (
                   <div className="text-center py-4">
                     <Heart className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
                     <p className="text-sm text-muted-foreground">暂无收藏试卷</p>

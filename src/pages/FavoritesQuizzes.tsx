@@ -43,8 +43,12 @@ const FavoritesQuizzes = () => {
 
   const favoriteQuizzes = user ? getFavoriteQuizzes(user.id) : [];
 
-  // Filter quizzes
+  // Filter quizzes - only show currently favorited quizzes
   const filteredQuizzes = favoriteQuizzes.filter(quiz => {
+    // First check if quiz is still favorited
+    const isFavorited = quiz.isFavorite;
+    if (!isFavorited) return false;
+    
     const matchesSearch = quiz.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       quiz.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       quiz.orderName.toLowerCase().includes(searchQuery.toLowerCase());
