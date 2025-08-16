@@ -10,6 +10,7 @@ import FastQuizMode from "./FastQuizMode";
 import DetailedQuizMode from "./DetailedQuizMode";
 import QuizGeneration from "./QuizGeneration";
 import QuizEditor from "./QuizEditor";
+import QuizActions from "./QuizActions";
 import { useQuiz } from "@/contexts/QuizContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -363,10 +364,11 @@ const TeacherDashboard = () => {
                           )}
                         </div>
                         
-                        <div className="ml-2">
+                        <div className="ml-2 flex flex-col gap-1">
                           <Button asChild variant="outline" size="sm" className="text-xs h-7">
                             <Link to={`/quiz/${quiz.id}`}>查看详情</Link>
                           </Button>
+                          <QuizActions quiz={quiz} compact />
                         </div>
                       </div>
                     </CardContent>

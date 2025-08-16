@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { FileText, Clock, CheckCircle, XCircle, Play, Package, BookOpen, GraduationCap, Zap } from "lucide-react";
+import QuizActions from "./QuizActions";
 import { useQuiz } from "@/contexts/QuizContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -94,7 +95,7 @@ const StudentDashboard = () => {
                       )}
                     </div>
                     
-                    <div className="flex gap-2 ml-4">
+                    <div className="flex flex-col gap-2 ml-4">
                       {quiz.isCompleted ? (
                         <Button asChild variant="outline" size="sm">
                           <Link to={`/quiz/${quiz.id}`}>查看详情</Link>
@@ -107,6 +108,7 @@ const StudentDashboard = () => {
                           </Link>
                         </Button>
                       )}
+                      <QuizActions quiz={quiz} compact />
                     </div>
                   </div>
                 </CardContent>

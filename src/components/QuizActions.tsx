@@ -38,9 +38,10 @@ import ShareQuizDialog from "./ShareQuizDialog";
 interface QuizActionsProps {
   quiz: any;
   onEdit?: () => void;
+  compact?: boolean; // For homepage use
 }
 
-const QuizActions = ({ quiz, onEdit }: QuizActionsProps) => {
+const QuizActions = ({ quiz, onEdit, compact = false }: QuizActionsProps) => {
   const { user } = useAuth();
   const { deleteQuiz, toggleFavorite, addToWrongAnswers } = useQuiz();
   const { toast } = useToast();
@@ -53,6 +54,15 @@ const QuizActions = ({ quiz, onEdit }: QuizActionsProps) => {
   const isTeacher = user?.role === 'teacher';
   const isStudent = user?.role === 'student';
   const canAnswer = isStudent && (!quiz.isCompleted || quiz.studentScore === undefined);
+
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit();
+    } else {
+      // Navigate to quiz editor
+      navigate(`/quiz/${quiz.id}/edit`);
+    }
+  };
 
   const handleDelete = () => {
     deleteQuiz(quiz.id);
@@ -85,50 +95,142 @@ const QuizActions = ({ quiz, onEdit }: QuizActionsProps) => {
   };
 
   if (isTeacher) {
+    if (compact) {
+      // Compact view for homepage
+      return (
+        <>
+          <div className="flex flex-wrap gap-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleToggleFavorite}
+              className="h-7 px-2 text-xs"
+            >
+              {quiz.isFavorite ? (
+                <HeartOff className="h-3 w-3" />
+              ) : (
+                <Heart className="h-3 w-3" />
+              )}
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowAddToOrderDialog(true)}
+              className="h-7 px-2 text-xs"
+            >
+              <Copy className="h-3 w-3" />
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowShareDialog(true)}
+              className="h-7 px-2 text-xs"
+            >
+              <Share2 className="h-3 w-3" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="h-7 px-2">
+                  <MoreVertical className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-32">
+                <DropdownMenuItem onClick={handleEdit}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  编辑
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  删除
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Dialogs */}
+          <AddToOrderDialog 
+            open={showAddToOrderDialog}
+            onOpenChange={setShowAddToOrderDialog}
+            quiz={quiz}
+          />
+          <ShareQuizDialog 
+            open={showShareDialog}
+            onOpenChange={setShowShareDialog}
+            quiz={quiz}
+          />
+        </>
+      );
+    }
+
+    // Full view for quiz list/detail pages
     return (
       <>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={onEdit}>
-              <Edit className="h-4 w-4 mr-2" />
-              编辑试卷
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleToggleFavorite}>
-              {quiz.isFavorite ? (
-                <>
-                  <HeartOff className="h-4 w-4 mr-2" />
-                  取消收藏
-                </>
-              ) : (
-                <>
-                  <Heart className="h-4 w-4 mr-2" />
-                  收藏试卷
-                </>
-              )}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowAddToOrderDialog(true)}>
-              <Copy className="h-4 w-4 mr-2" />
-              添加到其他订单
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setShowShareDialog(true)}>
-              <Share2 className="h-4 w-4 mr-2" />
-              发给学生
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={() => setShowDeleteDialog(true)}
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              删除试卷
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex gap-2">
+          {/* High frequency actions exposed */}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleToggleFavorite}
+            className="gap-2"
+          >
+            {quiz.isFavorite ? (
+              <>
+                <HeartOff className="h-4 w-4" />
+                取消收藏
+              </>
+            ) : (
+              <>
+                <Heart className="h-4 w-4" />
+                收藏试卷
+              </>
+            )}
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowAddToOrderDialog(true)}
+            className="gap-2"
+          >
+            <Copy className="h-4 w-4" />
+            添加到其他订单
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setShowShareDialog(true)}
+            className="gap-2"
+          >
+            <Share2 className="h-4 w-4" />
+            发给学生
+          </Button>
+          
+          {/* Other actions in dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-36">
+              <DropdownMenuItem onClick={handleEdit}>
+                <Edit className="h-4 w-4 mr-2" />
+                编辑试卷
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => setShowDeleteDialog(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                删除试卷
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

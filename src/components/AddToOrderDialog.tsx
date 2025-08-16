@@ -10,16 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQuiz } from "@/contexts/QuizContext";
-import { mockOrders } from "@/data/mockOrders";
+import { mockOrders, Order } from "@/data/mockOrders";
 import { Search } from "lucide-react";
 
 interface AddToOrderDialogProps {
@@ -32,25 +26,33 @@ const AddToOrderDialog = ({ open, onOpenChange, quiz }: AddToOrderDialogProps) =
   const { duplicateQuizToOrder } = useQuiz();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedOrder, setSelectedOrder] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  const filteredOrders = mockOrders.filter(order => 
-    order.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.student.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.course.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOrders = searchQuery.trim() 
+    ? mockOrders.filter(order => 
+        order.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.student.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.course.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
+
+  const handleOrderSelect = (order: Order) => {
+    setSelectedOrder(order);
+    setSearchQuery(order.name);
+    setShowDropdown(false);
+  };
 
   const handleAdd = () => {
-    const order = mockOrders.find(o => o.id === selectedOrder);
-    if (!order) return;
+    if (!selectedOrder) return;
 
-    duplicateQuizToOrder(quiz.id, order);
+    duplicateQuizToOrder(quiz.id, selectedOrder);
     toast({
       title: "试卷已添加",
-      description: `试卷已成功添加到订单 "${order.name}"`,
+      description: `试卷已成功添加到订单 "${selectedOrder.name}"`,
     });
     onOpenChange(false);
-    setSelectedOrder("");
+    setSelectedOrder(null);
     setSearchQuery("");
   };
 
@@ -65,7 +67,7 @@ const AddToOrderDialog = ({ open, onOpenChange, quiz }: AddToOrderDialogProps) =
         </DialogHeader>
         
         <div className="space-y-4">
-          <div>
+          <div className="relative">
             <Label htmlFor="search">搜索订单</Label>
             <div className="relative">
               <Input
@@ -73,38 +75,47 @@ const AddToOrderDialog = ({ open, onOpenChange, quiz }: AddToOrderDialogProps) =
                 placeholder="输入订单名称、学生姓名或课程名称"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => searchQuery.trim() && setShowDropdown(true)}
                 className="pr-10"
               />
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            </div>
-          </div>
-
-          <div>
-            <Label htmlFor="order">选择订单</Label>
-            <Select value={selectedOrder} onValueChange={setSelectedOrder}>
-              <SelectTrigger>
-                <SelectValue placeholder="请选择订单" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredOrders.map((order) => (
-                  <SelectItem key={order.id} value={order.id}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{order.name}</span>
-                      <span className="text-sm text-muted-foreground">
-                        {order.student} - {order.course}
-                      </span>
+              
+              {/* Search results dropdown */}
+              {showDropdown && searchQuery.trim() && (
+                <div className="absolute top-full left-0 right-0 z-50 bg-background border border-border rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.map((order) => (
+                      <div
+                        key={order.id}
+                        className="p-3 hover:bg-muted cursor-pointer border-b border-border last:border-b-0"
+                        onClick={() => handleOrderSelect(order)}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-medium text-sm">{order.name}</h4>
+                            <p className="text-xs text-muted-foreground">{order.student} - {order.course}</p>
+                          </div>
+                          <Badge variant={order.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                            {order.status === 'active' ? '进行中' : order.status === 'completed' ? '已完成' : '待开始'}
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center">
+                      <p className="text-sm text-muted-foreground">未找到匹配的订单</p>
                     </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           {selectedOrder && (
             <div className="p-3 bg-muted rounded-lg">
               <p className="text-sm font-medium">即将添加到：</p>
               <p className="text-sm text-muted-foreground">
-                {filteredOrders.find(o => o.id === selectedOrder)?.name}
+                {selectedOrder.name} - {selectedOrder.student}
               </p>
             </div>
           )}
