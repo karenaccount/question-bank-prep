@@ -160,7 +160,7 @@ export function SimpleDateRangePicker({
                 defaultMonth={value?.from}
                 selected={value}
                 onSelect={handleSelect}
-                numberOfMonths={1}
+                numberOfMonths={2}
                 className="pointer-events-auto"
                 disabled={(date) => date > new Date()}
               />
