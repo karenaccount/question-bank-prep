@@ -36,7 +36,7 @@ const AddToOrderDialog = ({ open, onOpenChange, quiz }: AddToOrderDialogProps) =
         order.student.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.course.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : [];
+    : mockOrders; // Show all orders when no search query
 
   const handleOrderSelect = (order: Order) => {
     setSelectedOrder(order);
@@ -88,13 +88,14 @@ const AddToOrderDialog = ({ open, onOpenChange, quiz }: AddToOrderDialogProps) =
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  setShowDropdown(e.target.value.trim().length > 0);
+                  setShowDropdown(true);
                 }}
-                onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+                onFocus={() => setShowDropdown(true)}
                 onBlur={(e) => {
                   // Delay hiding dropdown to allow clicking on items
                   setTimeout(() => {
-                    if (!e.currentTarget.contains(document.activeElement)) {
+                    const activeElement = document.activeElement;
+                    if (!activeElement || !e.currentTarget.contains(activeElement)) {
                       setShowDropdown(false);
                     }
                   }, 200);
@@ -104,7 +105,7 @@ const AddToOrderDialog = ({ open, onOpenChange, quiz }: AddToOrderDialogProps) =
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               
               {/* Search results dropdown */}
-              {showDropdown && searchQuery.trim() && (
+              {showDropdown && (
                 <div className="absolute top-full left-0 right-0 z-50 bg-background border border-border rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
                   {filteredOrders.length > 0 ? (
                     filteredOrders.map((order) => (
