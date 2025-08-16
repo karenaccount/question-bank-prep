@@ -47,6 +47,17 @@ const FastQuizMode = ({ order, onBack, onGenerate }: FastQuizModeProps) => {
     });
   };
 
+  const handleGenerate = () => {
+    const generateConfig = {
+      scenario: selectedScenario,
+      scenarioName: selectedScenario?.name,
+      questionCount: config.questionCount,
+      configuration: config,
+      totalQuestions: config.questionCount
+    };
+    onGenerate(generateConfig);
+  };
+
   const renderScenarioConfig = () => {
     if (!selectedScenario) return null;
 
@@ -218,7 +229,7 @@ const FastQuizMode = ({ order, onBack, onGenerate }: FastQuizModeProps) => {
             <Button onClick={() => setSelectedScenario(null)} variant="outline">
               重新选择场景
             </Button>
-            <Button onClick={() => onGenerate({scenario: selectedScenario, config})} className="flex-1">
+            <Button onClick={handleGenerate} className="flex-1">
               开始生成试卷
             </Button>
           </div>

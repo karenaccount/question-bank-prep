@@ -7,15 +7,17 @@ import { Search, Plus, FileText, Clock, BarChart3, CheckCircle } from "lucide-re
 import { mockOrders, Order } from "@/data/mockOrders";
 import FastQuizMode from "./FastQuizMode";
 import DetailedQuizMode from "./DetailedQuizMode";
+import QuizGeneration from "./QuizGeneration";
+import QuizEditor from "./QuizEditor";
 
 const TeacherDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [selectedMode, setSelectedMode] = useState<'fast' | 'detailed' | null>(null);
+  const [mode, setMode] = useState<'selection' | 'fast' | 'detailed' | 'generating' | 'editing'>('selection');
   const [showDropdown, setShowDropdown] = useState(false);
-  const [showFastMode, setShowFastMode] = useState(false);
-  const [showDetailedMode, setShowDetailedMode] = useState(false);
+  const [quizConfig, setQuizConfig] = useState<any>(null);
+  const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -42,64 +44,76 @@ const TeacherDashboard = () => {
     setSearchQuery(order.name);
   };
 
-  const handleModeSelect = (mode: 'fast' | 'detailed') => {
-    setSelectedMode(mode);
-    if (mode === 'fast') {
-      setShowFastMode(true);
-    } else if (mode === 'detailed') {
-      setShowDetailedMode(true);
-    }
+  const handleModeSelect = (modeType: 'fast' | 'detailed') => {
+    setMode(modeType);
   };
 
-  const handleStartGenerating = () => {
-    if (selectedOrder && selectedMode) {
-      // 这里后续会连接到实际的出题逻辑
-      alert(`开始为订单 ${selectedOrder.name} 生成试卷 (${selectedMode === 'fast' ? '快速模式' : '精细化模式'})`);
-    }
+  const handleGenerate = (config: any) => {
+    setQuizConfig({
+      ...config,
+      studentName: selectedOrder?.student
+    });
+    setMode('generating');
   };
 
-  const handleFastModeGenerate = (config: any) => {
-    console.log('生成试卷配置:', config);
-    alert(`开始生成${config.scenario.name}试卷，题目数量：${config.config.questionCount}题`);
-    setShowFastMode(false);
+  const handleGenerationComplete = (questions: any[]) => {
+    setGeneratedQuestions(questions);
+    setMode('editing');
   };
 
-  const handleDetailedModeGenerate = (config: any) => {
-    console.log('精细化出题配置:', config);
-    alert(`开始生成精细化试卷，总题数：${config.totalQuestions}题，总分：${config.calculatedScore}分`);
-    setShowDetailedMode(false);
+  const handleSaveQuiz = (quizName: string, questions: any[]) => {
+    console.log('Saving quiz:', { name: quizName, questions, order: selectedOrder });
+    // TODO: Implement actual save functionality
+    setMode('selection');
+    setSelectedOrder(null);
+    setQuizConfig(null);
+    setGeneratedQuestions([]);
   };
 
-  const handleBackFromFastMode = () => {
-    setShowFastMode(false);
-    setSelectedMode(null);
+  const resetMode = () => {
+    setMode('selection');
+    setSelectedOrder(null);
+    setQuizConfig(null);
+    setGeneratedQuestions([]);
   };
 
-  const handleBackFromDetailedMode = () => {
-    setShowDetailedMode(false);
-    setSelectedMode(null);
-  };
-
-  // 如果显示快速模式界面
-  if (showFastMode && selectedOrder) {
+  if (mode === 'fast' && selectedOrder) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <FastQuizMode
-          order={selectedOrder}
-          onBack={handleBackFromFastMode}
-          onGenerate={handleFastModeGenerate}
-        />
-      </div>
+      <FastQuizMode
+        order={selectedOrder}
+        onBack={resetMode}
+        onGenerate={handleGenerate}
+      />
     );
   }
 
-  // 如果显示精细化模式界面
-  if (showDetailedMode && selectedOrder) {
+  if (mode === 'detailed' && selectedOrder) {
     return (
       <DetailedQuizMode
         order={selectedOrder}
-        onBack={handleBackFromDetailedMode}
-        onGenerate={handleDetailedModeGenerate}
+        onBack={resetMode}
+        onGenerate={handleGenerate}
+      />
+    );
+  }
+
+  if (mode === 'generating' && quizConfig) {
+    return (
+      <QuizGeneration
+        config={quizConfig}
+        onBack={resetMode}
+        onComplete={handleGenerationComplete}
+      />
+    );
+  }
+
+  if (mode === 'editing' && generatedQuestions.length > 0) {
+    return (
+      <QuizEditor
+        questions={generatedQuestions}
+        config={quizConfig}
+        onBack={resetMode}
+        onSave={handleSaveQuiz}
       />
     );
   }
@@ -219,7 +233,7 @@ const TeacherDashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Card 
                     className={`cursor-pointer hover:shadow-md transition-shadow ${
-                      selectedMode === 'fast' ? 'border-primary ring-2 ring-primary/20' : 'border-primary/20'
+                      mode === 'fast' ? 'border-primary ring-2 ring-primary/20' : 'border-primary/20'
                     } ${!selectedOrder ? 'opacity-50 cursor-not-allowed' : ''}`}
                     onClick={() => selectedOrder && handleModeSelect('fast')}
                   >
@@ -227,14 +241,14 @@ const TeacherDashboard = () => {
                       <Clock className="w-8 h-8 mx-auto mb-2 text-primary" />
                       <h3 className="font-medium mb-1">快速出题模式</h3>
                       <p className="text-sm text-muted-foreground">AI自动分析课件，快速生成试卷</p>
-                      {selectedMode === 'fast' && (
+                      {mode === 'fast' && (
                         <CheckCircle className="w-5 h-5 mx-auto mt-2 text-green-600" />
                       )}
                     </CardContent>
                   </Card>
                   <Card 
                     className={`cursor-pointer hover:shadow-md transition-shadow ${
-                      selectedMode === 'detailed' ? 'border-primary ring-2 ring-primary/20' : 'border-primary/20'
+                      mode === 'detailed' ? 'border-primary ring-2 ring-primary/20' : 'border-primary/20'
                     } ${!selectedOrder ? 'opacity-50 cursor-not-allowed' : ''}`}
                     onClick={() => selectedOrder && handleModeSelect('detailed')}
                   >
@@ -242,7 +256,7 @@ const TeacherDashboard = () => {
                       <FileText className="w-8 h-8 mx-auto mb-2 text-primary" />
                       <h3 className="font-medium mb-1">精细化出题模式</h3>
                       <p className="text-sm text-muted-foreground">精准控制题目类型、难度和数量</p>
-                      {selectedMode === 'detailed' && (
+                      {mode === 'detailed' && (
                         <CheckCircle className="w-5 h-5 mx-auto mt-2 text-green-600" />
                       )}
                     </CardContent>
@@ -250,12 +264,11 @@ const TeacherDashboard = () => {
                 </div>
                 
                 {/* 开始生成按钮 */}
-                {selectedOrder && selectedMode && (
+                {selectedOrder && (mode === 'fast' || mode === 'detailed') && (
                   <div className="mt-4 text-center">
-                    <Button onClick={handleStartGenerating} size="lg" className="gap-2">
-                      <Plus className="w-4 h-4" />
-                      开始生成试卷
-                    </Button>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      已选择{mode === 'fast' ? '快速出题模式' : '精细化出题模式'}
+                    </p>
                   </div>
                 )}
               </div>

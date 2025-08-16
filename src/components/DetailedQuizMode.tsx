@@ -117,6 +117,7 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
 
   const handleGenerate = () => {
     const config = {
+      scenarioName: "精细化测验",
       knowledgePoints: selectedKnowledgePoints,
       questionTypes: Object.fromEntries(
         Object.entries(questionTypes).filter(([_, config]) => config.enabled)
