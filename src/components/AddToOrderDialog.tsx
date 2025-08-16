@@ -28,6 +28,7 @@ const AddToOrderDialog = ({ open, onOpenChange, quiz }: AddToOrderDialogProps) =
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [quizName, setQuizName] = useState("");
 
   const filteredOrders = searchQuery.trim() 
     ? mockOrders.filter(order => 
@@ -44,25 +45,36 @@ const AddToOrderDialog = ({ open, onOpenChange, quiz }: AddToOrderDialogProps) =
   };
 
   const handleAdd = () => {
-    if (!selectedOrder) return;
+    if (!selectedOrder || !quizName.trim()) return;
 
-    duplicateQuizToOrder(quiz.id, selectedOrder);
+    duplicateQuizToOrder(quiz.id, selectedOrder, quizName.trim());
     toast({
       title: "试卷已添加",
-      description: `试卷已成功添加到订单 "${selectedOrder.name}"`,
+      description: `试卷"${quizName}"已成功添加到订单"${selectedOrder.name}"`,
     });
     onOpenChange(false);
     setSelectedOrder(null);
     setSearchQuery("");
+    setQuizName("");
+  };
+
+  const resetDialog = () => {
+    setSelectedOrder(null);
+    setSearchQuery("");
+    setQuizName("");
+    setShowDropdown(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      onOpenChange(isOpen);
+      if (!isOpen) resetDialog();
+    }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>添加到其他订单</DialogTitle>
           <DialogDescription>
-            选择要添加试卷的订单，系统将为该订单创建一份新的试卷副本。
+            选择要添加试卷的订单并输入试卷名称，系统将为该订单创建一份新的试卷副本。
           </DialogDescription>
         </DialogHeader>
         
@@ -74,8 +86,19 @@ const AddToOrderDialog = ({ open, onOpenChange, quiz }: AddToOrderDialogProps) =
                 id="search"
                 placeholder="输入订单名称、学生姓名或课程名称"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowDropdown(e.target.value.trim().length > 0);
+                }}
                 onFocus={() => searchQuery.trim() && setShowDropdown(true)}
+                onBlur={(e) => {
+                  // Delay hiding dropdown to allow clicking on items
+                  setTimeout(() => {
+                    if (!e.currentTarget.contains(document.activeElement)) {
+                      setShowDropdown(false);
+                    }
+                  }, 200);
+                }}
                 className="pr-10"
               />
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -113,19 +136,35 @@ const AddToOrderDialog = ({ open, onOpenChange, quiz }: AddToOrderDialogProps) =
 
           {selectedOrder && (
             <div className="p-3 bg-muted rounded-lg">
-              <p className="text-sm font-medium">即将添加到：</p>
+              <p className="text-sm font-medium">选中的订单：</p>
               <p className="text-sm text-muted-foreground">
-                {selectedOrder.name} - {selectedOrder.student}
+                {selectedOrder.name} - {selectedOrder.student} ({selectedOrder.course})
               </p>
             </div>
           )}
+
+          <div>
+            <Label htmlFor="quizName">试卷名称</Label>
+            <Input
+              id="quizName"
+              placeholder="请输入试卷名称"
+              value={quizName}
+              onChange={(e) => setQuizName(e.target.value)}
+              disabled={!selectedOrder}
+            />
+            {selectedOrder && !quizName.trim() && (
+              <p className="text-xs text-muted-foreground mt-1">
+                请输入试卷名称
+              </p>
+            )}
+          </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             取消
           </Button>
-          <Button onClick={handleAdd} disabled={!selectedOrder}>
+          <Button onClick={handleAdd} disabled={!selectedOrder || !quizName.trim()}>
             添加试卷
           </Button>
         </DialogFooter>

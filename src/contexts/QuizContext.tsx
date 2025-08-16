@@ -44,7 +44,7 @@ interface QuizContextType {
   completeQuiz: (quizId: string, score: number) => void;
   deleteQuiz: (quizId: string) => void;
   toggleFavorite: (quizId: string) => void;
-  duplicateQuizToOrder: (quizId: string, order: any) => void;
+  duplicateQuizToOrder: (quizId: string, order: any, quizName?: string) => void;
   addToWrongAnswers: (questionId: string, quizId: string) => void;
   removeFromWrongAnswers: (questionId: string) => void;
   clearWrongAnswers: () => void;
@@ -116,13 +116,14 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
     );
   };
 
-  const duplicateQuizToOrder = (quizId: string, order: any) => {
+  const duplicateQuizToOrder = (quizId: string, order: any, quizName?: string) => {
     const originalQuiz = quizzes.find(q => q.id === quizId);
     if (!originalQuiz) return;
 
     const newQuiz: Quiz = {
       ...originalQuiz,
       id: Date.now().toString(),
+      name: quizName || `${originalQuiz.name} - 副本`,
       createdAt: new Date(),
       orderName: order.name,
       studentName: order.student,
