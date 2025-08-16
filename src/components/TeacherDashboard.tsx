@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Search, Plus, FileText, Clock, BarChart3, CheckCircle, User, Package, BookOpen, GraduationCap, Zap, Heart } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Plus, FileText, Clock, BarChart3, CheckCircle, User, Package, BookOpen, GraduationCap, Zap, Heart, Users, Filter, Brain } from "lucide-react";
 import { mockOrders, Order } from "@/data/mockOrders";
 import FastQuizMode from "./FastQuizMode";
 import DetailedQuizMode from "./DetailedQuizMode";
@@ -25,7 +27,53 @@ const TeacherDashboard = () => {
   const [quizConfig, setQuizConfig] = useState<any>(null);
   const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
   
+  // 答题统计相关状态
+  const [statsDimension, setStatsDimension] = useState<'student' | 'order' | 'knowledge'>('student');
+  const [selectedStudent, setSelectedStudent] = useState<string>('');
+  const [studentSearchQuery, setStudentSearchQuery] = useState('');
+  
   const teacherQuizzes = user ? getQuizzesByTeacher(user.id) : [];
+  
+  // 获取所有学生名单
+  const allStudents = Array.from(new Set(teacherQuizzes.map(quiz => quiz.studentName)));
+  const filteredStudents = allStudents.filter(student => 
+    student.toLowerCase().includes(studentSearchQuery.toLowerCase())
+  );
+  
+  // 计算学生统计数据
+  const getStudentStats = (studentName: string) => {
+    const studentQuizzes = teacherQuizzes.filter(quiz => quiz.studentName === studentName);
+    const completedQuizzes = studentQuizzes.filter(quiz => quiz.isCompleted);
+    const totalQuizzes = studentQuizzes.length;
+    const completionRate = totalQuizzes > 0 ? Math.round((completedQuizzes.length / totalQuizzes) * 100) : 0;
+    
+    // 计算平均正确率
+    const totalCorrectQuestions = completedQuizzes.reduce((sum, quiz) => {
+      if (quiz.studentScore && quiz.totalScore) {
+        return sum + (quiz.studentScore / quiz.totalScore) * quiz.totalQuestions;
+      }
+      return sum;
+    }, 0);
+    const totalQuestions = completedQuizzes.reduce((sum, quiz) => sum + quiz.totalQuestions, 0);
+    const averageAccuracy = totalQuestions > 0 ? Math.round((totalCorrectQuestions / totalQuestions) * 100) : 0;
+    
+    // 计算薄弱知识点（模拟数据）
+    const weakKnowledgePoints = [
+      { name: '函数与方程', errorRate: 45 },
+      { name: '几何图形', errorRate: 38 },
+      { name: '数据分析', errorRate: 32 },
+      { name: '概率统计', errorRate: 28 },
+      { name: '代数运算', errorRate: 25 }
+    ].slice(0, 5);
+    
+    return {
+      completedQuizzes: completedQuizzes.length,
+      totalQuizzes,
+      completionRate,
+      averageAccuracy,
+      weakKnowledgePoints
+    };
+  };
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -465,20 +513,151 @@ const TeacherDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">12</div>
-                  <div className="text-sm text-muted-foreground">本周生成试卷</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">8</div>
-                  <div className="text-sm text-muted-foreground">已完成答题</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">85%</div>
-                  <div className="text-sm text-muted-foreground">平均正确率</div>
-                </div>
-              </div>
+              <Tabs value={statsDimension} onValueChange={(value) => setStatsDimension(value as any)}>
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="student" className="flex items-center gap-1">
+                    <Users className="w-3 h-3" />
+                    按学生
+                  </TabsTrigger>
+                  <TabsTrigger value="order" className="flex items-center gap-1">
+                    <Package className="w-3 h-3" />
+                    按订单
+                  </TabsTrigger>
+                  <TabsTrigger value="knowledge" className="flex items-center gap-1">
+                    <Brain className="w-3 h-3" />
+                    按知识点
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="student" className="space-y-4 mt-4">
+                  {/* 学生搜索 */}
+                  <div className="relative">
+                    <Input
+                      placeholder="搜索学生姓名"
+                      value={studentSearchQuery}
+                      onChange={(e) => setStudentSearchQuery(e.target.value)}
+                      className="pr-8"
+                    />
+                    <Search className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  </div>
+                  
+                  {/* 学生选择 */}
+                  {filteredStudents.length > 0 && (
+                    <Select value={selectedStudent} onValueChange={setSelectedStudent}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="选择学生" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredStudents.map((student) => (
+                          <SelectItem key={student} value={student}>
+                            {student}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  
+                  {/* 学生统计数据 */}
+                  {selectedStudent && (() => {
+                    const stats = getStudentStats(selectedStudent);
+                    return (
+                      <div className="space-y-4">
+                        <div className="text-center border-b pb-2">
+                          <h4 className="font-medium text-sm">{selectedStudent} 的答题统计</h4>
+                        </div>
+                        
+                        {/* 完成率 */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">完成率</span>
+                            <span className="font-medium">{stats.completionRate}%</span>
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            已完成 {stats.completedQuizzes} / {stats.totalQuizzes} 份试卷
+                          </div>
+                        </div>
+                        
+                        {/* 正确率 */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">平均正确率</span>
+                            <span className="font-medium text-green-600">{stats.averageAccuracy}%</span>
+                          </div>
+                        </div>
+                        
+                        {/* 薄弱知识点 */}
+                        <div className="space-y-2">
+                          <h5 className="text-sm font-medium">薄弱知识点 (错误率最高)</h5>
+                          <div className="space-y-1">
+                            {stats.weakKnowledgePoints.map((point, index) => (
+                              <div key={index} className="flex justify-between items-center text-xs">
+                                <span className="text-muted-foreground">{point.name}</span>
+                                <Badge variant="destructive" className="text-xs">
+                                  {point.errorRate}%
+                                </Badge>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  
+                  {!selectedStudent && (
+                    <div className="text-center py-4">
+                      <Users className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+                      <p className="text-sm text-muted-foreground">请选择学生查看统计</p>
+                    </div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="order" className="space-y-4 mt-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary">12</div>
+                    <div className="text-sm text-muted-foreground">本周生成试卷</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">8</div>
+                    <div className="text-sm text-muted-foreground">已完成答题</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-blue-600">85%</div>
+                    <div className="text-sm text-muted-foreground">平均正确率</div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="knowledge" className="space-y-4 mt-4">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">函数与方程</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
+                          <div className="h-full bg-green-500" style={{ width: '78%' }}></div>
+                        </div>
+                        <span className="text-xs font-medium">78%</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">几何图形</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
+                          <div className="h-full bg-yellow-500" style={{ width: '65%' }}></div>
+                        </div>
+                        <span className="text-xs font-medium">65%</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">数据分析</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
+                          <div className="h-full bg-orange-500" style={{ width: '58%' }}></div>
+                        </div>
+                        <span className="text-xs font-medium">58%</span>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
         </div>
