@@ -367,7 +367,8 @@ const QuizDetail = () => {
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
+              <CardContent>
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {quiz.questions.map((question: any, index: number) => (
                   <Card key={index} className="border-l-4 border-l-primary">
                     <CardContent className="p-4">
@@ -516,6 +517,7 @@ const QuizDetail = () => {
                     </CardContent>
                   </Card>
                 ))}
+                </div>
               </CardContent>
             </Card>
           </div>
