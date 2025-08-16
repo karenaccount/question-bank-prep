@@ -59,7 +59,7 @@ const Index = () => {
         {/* Logo and Introduction */}
         <div className="text-center space-y-4">
           <div className="flex justify-center">
-            <img src={teacherLogo} alt="小班题库" className="w-20 h-20" />
+            <img src={teacherLogo || '/placeholder.svg'} alt="小班题库" className="w-20 h-20" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-foreground">小班题库</h1>
