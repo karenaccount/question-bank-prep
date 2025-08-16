@@ -105,7 +105,7 @@ const AddToOrderDialog = ({ open, onOpenChange, quiz }: AddToOrderDialogProps) =
               <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               
               {/* Search results dropdown */}
-              {showDropdown && (
+              {showDropdown && filteredOrders.length >= 0 && (
                 <div className="absolute top-full left-0 right-0 z-50 bg-background border border-border rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
                   {filteredOrders.length > 0 ? (
                     filteredOrders.map((order) => (
