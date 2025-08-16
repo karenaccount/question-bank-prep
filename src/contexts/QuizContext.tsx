@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { testQuizzes } from '@/data/testQuizzes';
 
 export interface Quiz {
   id: string;
@@ -61,15 +62,7 @@ interface QuizProviderProps {
 }
 
 export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
-  const [quizzes, setQuizzes] = useState<Quiz[]>(() => {
-    // Initialize with test data
-    try {
-      const { testQuizzes } = require('@/data/testQuizzes');
-      return testQuizzes;
-    } catch {
-      return [];
-    }
-  });
+  const [quizzes, setQuizzes] = useState<Quiz[]>(testQuizzes);
   const [wrongAnswers, setWrongAnswers] = useState<WrongAnswer[]>([]);
 
   const saveQuiz = (quizData: Omit<Quiz, 'id' | 'createdAt' | 'isCompleted'>) => {

@@ -30,6 +30,11 @@ const QuizList = () => {
     ? getQuizzesByTeacher(user.id) 
     : getQuizzesByStudent(user?.id || '');
 
+  // Debug information
+  console.log('Current user:', user);
+  console.log('All quizzes:', quizzes);
+  console.log('User quizzes:', userQuizzes);
+
   const getStatusBadge = (quiz: any) => {
     if (quiz.isCompleted) {
       return <Badge variant="secondary" className="bg-green-100 text-green-800">已答题</Badge>;
