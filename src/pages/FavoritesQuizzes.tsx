@@ -5,7 +5,7 @@ import { useQuiz } from "@/contexts/QuizContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { SimpleDateRangePicker } from "@/components/ui/simple-date-range-picker";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import {
@@ -163,7 +163,7 @@ const FavoritesQuizzes = () => {
               
               <div>
                 <label className="text-sm font-medium mb-2 block">时间段</label>
-                <SimpleDateRangePicker
+                <DateRangePicker
                   value={dateRange}
                   onChange={setDateRange}
                   placeholder="请选择日期范围"

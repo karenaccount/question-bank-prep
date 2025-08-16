@@ -19,42 +19,31 @@ interface DateRangePickerProps {
   className?: string
 }
 
-const quickSelectOptions = [
-  { label: "最近7天", days: 7 },
-  { label: "最近30天", days: 30 },
-  { label: "最近90天", days: 90 },
-]
-
 export function DateRangePicker({
   value,
   onChange,
-  placeholder = "请选择日期范围",
+  placeholder = "选择日期范围",
   className,
 }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = React.useState(false)
 
   const formatDateRange = (dateRange: DateRange | undefined) => {
-    if (!dateRange) return placeholder
-    
-    if (dateRange.from) {
-      if (dateRange.to) {
-        if (dateRange.from.getTime() === dateRange.to.getTime()) {
-          return format(dateRange.from, "yyyy-MM-dd")
-        }
-        return `${format(dateRange.from, "yyyy-MM-dd")} 至 ${format(dateRange.to, "yyyy-MM-dd")}`
-      } else {
-        return `${format(dateRange.from, "yyyy-MM-dd")} 至 ...`
-      }
+    if (!dateRange || !dateRange.from) {
+      return placeholder
     }
     
-    return placeholder
+    if (dateRange.to) {
+      return `${format(dateRange.from, "yyyy-MM-dd")} 至 ${format(dateRange.to, "yyyy-MM-dd")}`
+    }
+    
+    return `${format(dateRange.from, "yyyy-MM-dd")} 至 ...`
   }
 
   const handleSelect = (range: DateRange | undefined) => {
     onChange?.(range)
     
-    // Auto close when both dates are selected and different
-    if (range?.from && range?.to && range.from.getTime() !== range.to.getTime()) {
+    // 当选择了完整的日期范围时自动关闭
+    if (range?.from && range?.to) {
       setTimeout(() => setIsOpen(false), 150)
     }
   }
@@ -62,16 +51,6 @@ export function DateRangePicker({
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation()
     onChange?.(undefined)
-  }
-
-  const handleQuickSelect = (days: number) => {
-    const today = new Date()
-    const startDate = new Date()
-    startDate.setDate(today.getDate() - days + 1)
-    
-    const range = { from: startDate, to: today }
-    onChange?.(range)
-    setIsOpen(false)
   }
 
   const hasValue = value?.from || value?.to
@@ -102,57 +81,38 @@ export function DateRangePicker({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <div className="flex">
-            {/* Quick Select Sidebar */}
-            <div className="border-r bg-muted/30 p-3 space-y-1">
-              <div className="text-xs font-medium text-muted-foreground mb-2">快捷选择</div>
-              {quickSelectOptions.map((option) => (
-                <Button
-                  key={option.days}
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-xs h-8"
-                  onClick={() => handleQuickSelect(option.days)}
-                >
-                  {option.label}
-                </Button>
-              ))}
-              {hasValue && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="w-full justify-start text-xs h-8 text-muted-foreground"
-                  onClick={() => onChange?.(undefined)}
-                >
-                  清除选择
-                </Button>
-              )}
-            </div>
-            
-            {/* Calendar */}
-            <div>
-              <div className="p-3 border-b bg-muted/20">
-                <p className="text-sm text-muted-foreground">
-                  {!value?.from 
-                    ? "请选择开始日期" 
-                    : !value?.to 
-                      ? "请选择结束日期" 
-                      : `${format(value.from, "MM月dd日")} 至 ${format(value.to, "MM月dd日")}`
-                  }
-                </p>
-              </div>
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={value?.from}
-                selected={value}
-                onSelect={handleSelect}
-                numberOfMonths={2}
-                className="pointer-events-auto"
-                disabled={(date) => date > new Date()}
-              />
-            </div>
+          <div className="p-3 border-b bg-muted/20">
+            <p className="text-sm text-muted-foreground">
+              {!value?.from 
+                ? "请选择开始日期" 
+                : !value?.to 
+                  ? "请选择结束日期" 
+                  : `已选择：${format(value.from, "MM月dd日")} 至 ${format(value.to, "MM月dd日")}`
+              }
+            </p>
           </div>
+          <Calendar
+            initialFocus
+            mode="range"
+            defaultMonth={value?.from}
+            selected={value}
+            onSelect={handleSelect}
+            numberOfMonths={2}
+            className="pointer-events-auto"
+            disabled={(date) => date > new Date()}
+          />
+          {hasValue && (
+            <div className="p-3 border-t">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => onChange?.(undefined)}
+              >
+                清除选择
+              </Button>
+            </div>
+          )}
         </PopoverContent>
       </Popover>
     </div>
