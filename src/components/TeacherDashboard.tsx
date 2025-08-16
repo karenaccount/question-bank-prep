@@ -11,28 +11,31 @@ const TeacherDashboard = () => {
   const [searchResults, setSearchResults] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedMode, setSelectedMode] = useState<'fast' | 'detailed' | null>(null);
-  const [showResults, setShowResults] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  const handleSearch = () => {
-    if (!searchQuery.trim()) {
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    
+    if (!value.trim()) {
       setSearchResults([]);
-      setShowResults(false);
+      setShowDropdown(false);
       return;
     }
 
     const results = mockOrders.filter(order => 
-      order.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.student.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.course.toLowerCase().includes(searchQuery.toLowerCase())
+      order.name.toLowerCase().includes(value.toLowerCase()) ||
+      order.student.toLowerCase().includes(value.toLowerCase()) ||
+      order.course.toLowerCase().includes(value.toLowerCase())
     );
     
     setSearchResults(results);
-    setShowResults(true);
+    setShowDropdown(true);
   };
 
   const handleOrderSelect = (order: Order) => {
     setSelectedOrder(order);
-    setShowResults(false);
+    setShowDropdown(false);
+    setSearchQuery(order.name);
   };
 
   const handleModeSelect = (mode: 'fast' | 'detailed') => {
@@ -59,53 +62,51 @@ const TeacherDashboard = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               {/* 搜索订单 */}
-              <div>
+              <div className="relative">
                 <label className="text-sm font-medium mb-2 block">搜索订单</label>
-                <div className="flex gap-2">
+                <div className="relative">
                   <Input 
-                    placeholder="输入订单号或学生姓名" 
-                    className="flex-1"
+                    placeholder="输入订单名称、学生姓名或课程名称" 
+                    className="w-full"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onFocus={() => searchQuery.trim() && setShowDropdown(true)}
                   />
-                  <Button className="gap-2" onClick={handleSearch}>
-                    <Search className="w-4 h-4" />
-                    搜索
-                  </Button>
-                </div>
-                
-                {/* 搜索结果 */}
-                {showResults && (
-                  <div className="mt-3 space-y-2">
-                    {searchResults.length > 0 ? (
-                      searchResults.map((order) => (
-                        <Card 
-                          key={order.id} 
-                          className="cursor-pointer hover:shadow-md transition-shadow border-primary/20"
+                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  
+                  {/* 搜索结果下拉列表 */}
+                  {showDropdown && searchResults.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 z-50 bg-background border border-border rounded-md shadow-lg mt-1 max-h-60 overflow-y-auto">
+                      {searchResults.map((order) => (
+                        <div
+                          key={order.id}
+                          className="p-3 hover:bg-muted cursor-pointer border-b border-border last:border-b-0"
                           onClick={() => handleOrderSelect(order)}
                         >
-                          <CardContent className="p-3">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className="font-medium">{order.name}</h4>
-                                <p className="text-sm text-muted-foreground">{order.student} - {order.course}</p>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  知识点：{order.knowledgePoints.length}个
-                                </p>
-                              </div>
-                              <Badge variant={order.status === 'active' ? 'default' : 'secondary'}>
-                                {order.status === 'active' ? '进行中' : order.status === 'completed' ? '已完成' : '待开始'}
-                              </Badge>
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h4 className="font-medium text-sm">{order.name}</h4>
+                              <p className="text-xs text-muted-foreground">{order.student} - {order.course}</p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                知识点：{order.knowledgePoints.join(', ')}
+                              </p>
                             </div>
-                          </CardContent>
-                        </Card>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground text-center py-4">未找到匹配的订单</p>
-                    )}
-                  </div>
-                )}
+                            <Badge variant={order.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                              {order.status === 'active' ? '进行中' : order.status === 'completed' ? '已完成' : '待开始'}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* 无搜索结果提示 */}
+                  {showDropdown && searchQuery.trim() && searchResults.length === 0 && (
+                    <div className="absolute top-full left-0 right-0 z-50 bg-background border border-border rounded-md shadow-lg mt-1 p-4 text-center">
+                      <p className="text-sm text-muted-foreground">未找到匹配的订单</p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* 选中的订单显示区域 */}
@@ -138,7 +139,11 @@ const TeacherDashboard = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => setSelectedOrder(null)}
+                          onClick={() => {
+                            setSelectedOrder(null);
+                            setSearchQuery("");
+                            setShowDropdown(false);
+                          }}
                         >
                           重新选择
                         </Button>
