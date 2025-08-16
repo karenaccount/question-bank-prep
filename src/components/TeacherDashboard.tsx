@@ -21,9 +21,9 @@ const TeacherDashboard = () => {
     }
 
     const results = mockOrders.filter(order => 
-      order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.subject.toLowerCase().includes(searchQuery.toLowerCase())
+      order.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.student.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.course.toLowerCase().includes(searchQuery.toLowerCase())
     );
     
     setSearchResults(results);
@@ -42,7 +42,7 @@ const TeacherDashboard = () => {
   const handleStartGenerating = () => {
     if (selectedOrder && selectedMode) {
       // 这里后续会连接到实际的出题逻辑
-      alert(`开始为订单 ${selectedOrder.orderNumber} 生成试卷 (${selectedMode === 'fast' ? '快速模式' : '精细化模式'})`);
+      alert(`开始为订单 ${selectedOrder.name} 生成试卷 (${selectedMode === 'fast' ? '快速模式' : '精细化模式'})`);
     }
   };
   return (
@@ -88,10 +88,10 @@ const TeacherDashboard = () => {
                           <CardContent className="p-3">
                             <div className="flex justify-between items-start">
                               <div>
-                                <h4 className="font-medium">{order.orderNumber}</h4>
-                                <p className="text-sm text-muted-foreground">{order.studentName} - {order.subject}</p>
+                                <h4 className="font-medium">{order.name}</h4>
+                                <p className="text-sm text-muted-foreground">{order.student} - {order.course}</p>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  课件文件：{order.lectureFiles.length}个
+                                  知识点：{order.knowledgePoints.length}个
                                 </p>
                               </div>
                               <Badge variant={order.status === 'active' ? 'default' : 'secondary'}>
@@ -118,18 +118,18 @@ const TeacherDashboard = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <CheckCircle className="w-4 h-4 text-green-600" />
-                            <h4 className="font-medium">{selectedOrder.orderNumber}</h4>
+                            <h4 className="font-medium">{selectedOrder.name}</h4>
                           </div>
                           <p className="text-sm text-muted-foreground mb-2">
-                            学生：{selectedOrder.studentName} | 科目：{selectedOrder.subject}
+                            学生：{selectedOrder.student} | 课程：{selectedOrder.course}
                           </p>
                           <div className="text-sm">
-                            <p className="font-medium mb-1">课件文件：</p>
+                            <p className="font-medium mb-1">相关知识点：</p>
                             <ul className="text-muted-foreground space-y-1">
-                              {selectedOrder.lectureFiles.map((file, index) => (
+                              {selectedOrder.knowledgePoints.map((point, index) => (
                                 <li key={index} className="flex items-center gap-2">
                                   <FileText className="w-3 h-3" />
-                                  {file}
+                                  {point}
                                 </li>
                               ))}
                             </ul>
