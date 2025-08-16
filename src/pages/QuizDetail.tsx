@@ -175,9 +175,12 @@ const QuizDetail = () => {
                   <h1 className="text-2xl font-bold text-foreground">{quiz.name}</h1>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                  {getStatusBadge()}
-                </div>
+                {/* Only show status badge if NOT from favorites */}
+                {!isFromFavorites && (
+                  <div className="flex items-center gap-3">
+                    {getStatusBadge()}
+                  </div>
+                )}
               </div>
               
               {/* Actions */}
@@ -263,7 +266,8 @@ const QuizDetail = () => {
                   <div className="text-2xl font-bold text-primary">{quiz.totalScore}分</div>
                 </div>
 
-                {quiz.isCompleted && quiz.studentScore !== undefined && (
+                {/* Only show student score and completion info if NOT from favorites */}
+                {!isFromFavorites && quiz.isCompleted && quiz.studentScore !== undefined && (
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">学生得分</div>
                     <div className="text-2xl font-bold text-green-600">
@@ -275,7 +279,7 @@ const QuizDetail = () => {
                   </div>
                 )}
 
-                {quiz.completedAt && (
+                {!isFromFavorites && quiz.completedAt && (
                   <div>
                     <div className="text-sm text-muted-foreground mb-1">完成时间</div>
                     <div className="font-medium">{quiz.completedAt.toLocaleString()}</div>
@@ -284,8 +288,8 @@ const QuizDetail = () => {
               </CardContent>
                 </Card>
 
-                {/* Quiz Analysis */}
-                {quiz.isCompleted && (
+                {/* Quiz Analysis - Only show if NOT from favorites */}
+                {!isFromFavorites && quiz.isCompleted && (
                   <Card>
                     <CardHeader>
                       <CardTitle>答题结果分析</CardTitle>
