@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,24 +6,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useSearchParams } from 'react-router-dom';
 import teacherLogo from '@/assets/teacher-logo.png';
 import IntelligentGeneration from "@/components/IntelligentGeneration";
 import AnswerStatistics from "@/components/AnswerStatistics";
-import WelcomeMessage from "@/components/WelcomeMessage";
-import TeacherDashboard from "@/components/TeacherDashboard";
-import StudentDashboard from "@/components/StudentDashboard";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import QuizList from "@/pages/QuizList";
-import FavoritesQuizzes from "@/pages/FavoritesQuizzes";
 
 const Index = () => {
   const { isAuthenticated, user, login } = useAuth();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<'student' | 'teacher'>('teacher');
-  const [activeView, setActiveView] = useState<'intelligent-generation' | 'quiz-list' | 'favorites' | 'statistics' | 'login'>('intelligent-generation');
+  
+  const view = searchParams.get('view') || 'intelligent-generation';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,25 +136,13 @@ const Index = () => {
       return renderLoginForm();
     }
 
-    switch (activeView) {
-      case 'intelligent-generation':
-        return (
-          <div className="min-h-screen bg-background">
-            <IntelligentGeneration />
-          </div>
-        );
+    switch (view) {
       case 'statistics':
         return (
           <div className="min-h-screen bg-background">
             <AnswerStatistics />
           </div>
         );
-      case 'quiz-list':
-        return <QuizList />;
-      case 'favorites':
-        return <FavoritesQuizzes />;
-      case 'login':
-        return renderLoginForm();
       default:
         return (
           <div className="min-h-screen bg-background">
@@ -169,10 +155,7 @@ const Index = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <AppSidebar 
-          activeView={activeView} 
-          onViewChange={setActiveView} 
-        />
+        <AppSidebar />
         <SidebarInset className="flex-1">
           {renderMainContent()}
         </SidebarInset>

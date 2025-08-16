@@ -1,5 +1,6 @@
 import { Brain, FileText, Heart, BarChart3, LogIn, LogOut, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
 import teacherLogo from "@/assets/teacher-logo.png";
 import WelcomeMessage from "@/components/WelcomeMessage";
 import {
@@ -16,51 +17,66 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface AppSidebarProps {
-  activeView: 'intelligent-generation' | 'quiz-list' | 'favorites' | 'statistics' | 'login';
-  onViewChange: (view: 'intelligent-generation' | 'quiz-list' | 'favorites' | 'statistics' | 'login') => void;
+  className?: string;
 }
 
-export function AppSidebar({ activeView, onViewChange }: AppSidebarProps) {
+export function AppSidebar({ className }: AppSidebarProps) {
   const { user, logout, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const menuItems = [
     { 
       id: 'intelligent-generation' as const, 
       title: '智能出题', 
       icon: Brain,
+      path: '/',
     },
     { 
       id: 'statistics' as const, 
       title: '答题统计', 
       icon: BarChart3,
+      path: '/?view=statistics',
     },
     { 
       id: 'quiz-list' as const, 
       title: '试卷管理', 
       icon: FileText,
+      path: '/quiz-list',
     },
     { 
       id: 'favorites' as const, 
       title: '我的收藏', 
       icon: Heart,
+      path: '/favorites',
     },
   ];
 
-  const handleMenuClick = (viewId: 'intelligent-generation' | 'quiz-list' | 'favorites' | 'statistics') => {
+  const handleMenuClick = (item: typeof menuItems[0]) => {
     if (!isAuthenticated) {
-      onViewChange('login');
+      navigate('/auth');
     } else {
-      onViewChange(viewId);
+      navigate(item.path);
     }
   };
 
   const handleAuthAction = () => {
     if (isAuthenticated) {
       logout();
-      onViewChange('login');
+      navigate('/auth');
     } else {
-      onViewChange('login');
+      navigate('/auth');
     }
+  };
+
+  const isActiveRoute = (path: string) => {
+    if (path === '/') {
+      return location.pathname === '/' && !location.search.includes('view=statistics');
+    }
+    if (path === '/?view=statistics') {
+      return location.pathname === '/' && location.search.includes('view=statistics');
+    }
+    return location.pathname === path;
   };
 
   return (
@@ -82,8 +98,8 @@ export function AppSidebar({ activeView, onViewChange }: AppSidebarProps) {
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.id}>
               <SidebarMenuButton
-                onClick={() => handleMenuClick(item.id)}
-                isActive={activeView === item.id}
+                onClick={() => handleMenuClick(item)}
+                isActive={isActiveRoute(item.path)}
                 className="w-full justify-start gap-3 py-3"
               >
                 <item.icon className="w-5 h-5" />

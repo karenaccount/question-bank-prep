@@ -160,10 +160,7 @@ const QuizDetail = () => {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <AppSidebar 
-          activeView="quiz-list" 
-          onViewChange={() => {}} 
-        />
+        <AppSidebar />
         <SidebarInset className="flex-1">
           <div className="px-4 py-6">
             {/* Header */}
