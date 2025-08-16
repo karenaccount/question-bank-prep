@@ -55,6 +55,9 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
   const isTeacher = user?.role === 'teacher';
   const isStudent = user?.role === 'student';
   const canAnswer = isStudent && (!quiz.isCompleted || quiz.studentScore === undefined);
+  
+  // Check if this quiz is from favorites page
+  const isFromFavorites = window.location.pathname === '/favorites' || window.location.pathname.includes('/quiz/') && document.referrer.includes('favorites');
 
   const handleEdit = () => {
     if (onEdit) {
@@ -99,6 +102,8 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
   if (isTeacher) {
     if (iconOnly) {
       // Icon-only view for list pages
+      const showLimitedActions = isFromFavorites;
+      
       return (
         <>
           <div className="flex gap-1">
@@ -115,45 +120,49 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
                 <Heart className="h-4 w-4" />
               )}
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowAddToOrderDialog(true)}
-              className="h-8 w-8 p-0"
-              title="添加到其他订单"
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setShowShareDialog(true)}
-              className="h-8 w-8 p-0"
-              title="发给学生"
-            >
-              <Share2 className="h-4 w-4" />
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="h-8 w-8 p-0" title="更多操作">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-32">
-                <DropdownMenuItem onClick={handleEdit}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  编辑
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="text-destructive focus:text-destructive"
+            {!showLimitedActions && (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowAddToOrderDialog(true)}
+                  className="h-8 w-8 p-0"
+                  title="添加到其他订单"
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  删除
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <Copy className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowShareDialog(true)}
+                  className="h-8 w-8 p-0"
+                  title="发给学生"
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0" title="更多操作">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-32">
+                    <DropdownMenuItem onClick={handleEdit}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      编辑
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      删除
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
           </div>
 
           {/* Delete Confirmation Dialog */}
@@ -181,16 +190,20 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
           </AlertDialog>
 
           {/* Dialogs */}
-          <AddToOrderDialog 
-            open={showAddToOrderDialog}
-            onOpenChange={setShowAddToOrderDialog}
-            quiz={quiz}
-          />
-          <ShareQuizDialog 
-            open={showShareDialog}
-            onOpenChange={setShowShareDialog}
-            quiz={quiz}
-          />
+          {!isFromFavorites && (
+            <>
+              <AddToOrderDialog 
+                open={showAddToOrderDialog}
+                onOpenChange={setShowAddToOrderDialog}
+                quiz={quiz}
+              />
+              <ShareQuizDialog 
+                open={showShareDialog}
+                onOpenChange={setShowShareDialog}
+                quiz={quiz}
+              />
+            </>
+          )}
         </>
       );
     }

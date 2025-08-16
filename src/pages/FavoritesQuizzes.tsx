@@ -127,7 +127,7 @@ const FavoritesQuizzes = () => {
             <CardTitle className="text-lg">筛选条件</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="relative">
                 <label className="text-sm font-medium mb-2 block">订单号</label>
                 <Input
@@ -195,37 +195,6 @@ const FavoritesQuizzes = () => {
                 </Popover>
               </div>
 
-              {user?.role === 'teacher' && (
-                <div className="relative">
-                  <label className="text-sm font-medium mb-2 block">学生</label>
-                  <Input
-                    placeholder="输入学生姓名..."
-                    value={studentQuery}
-                    onChange={(e) => {
-                      setStudentQuery(e.target.value);
-                      setStudentDropdownOpen(e.target.value.length > 0);
-                    }}
-                    onFocus={() => setStudentDropdownOpen(studentQuery.length > 0)}
-                    onBlur={() => setTimeout(() => setStudentDropdownOpen(false), 200)}
-                  />
-                  {studentDropdownOpen && filteredStudents.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-md max-h-48 overflow-y-auto">
-                      {filteredStudents.map(student => (
-                        <div
-                          key={student}
-                          className="px-3 py-2 hover:bg-accent cursor-pointer text-sm"
-                          onClick={() => {
-                            setStudentQuery(student);
-                            setStudentDropdownOpen(false);
-                          }}
-                        >
-                          {student}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
 
               <div className="relative">
                 <label className="text-sm font-medium mb-2 block">课程</label>
@@ -347,26 +316,14 @@ const FavoritesQuizzes = () => {
                             <span>{quiz.createdAt.toLocaleDateString()}</span>
                           </div>
                           
-                          {user?.role === 'teacher' && (
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4" />
-                              <span>{quiz.studentName}</span>
-                            </div>
-                          )}
-                          
                           <div className="flex items-center gap-2">
-                            <Package className="h-4 w-4" />
-                            <span>{quiz.orderName}</span>
+                            <BookOpen className="h-4 w-4" />
+                            <span>{quiz.course}</span>
                           </div>
                           
                           <div className="flex items-center gap-2">
                             <Target className="h-4 w-4" />
                             <span>概率论</span> {/* Mock knowledge point */}
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <BookOpen className="h-4 w-4" />
-                            <span>{quiz.course}</span>
                           </div>
                           
                           <div className="flex items-center gap-2">
@@ -380,13 +337,6 @@ const FavoritesQuizzes = () => {
                           </div>
                         </div>
                         
-                        {quiz.isCompleted && quiz.studentScore !== undefined && (
-                          <div className="mt-3 text-sm">
-                            <span className="text-green-600 font-medium">
-                              学生得分: {quiz.studentScore}/{quiz.totalScore}分
-                            </span>
-                          </div>
-                        )}
                       </div>
                       
                       <div className="ml-4">

@@ -142,21 +142,25 @@ const QuizDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="flex min-h-screen bg-background">
+      <div className="flex-1 px-4 py-6">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            返回
-          </Button>
-          <div className="flex-1">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-foreground">{quiz.name}</h1>
-              {getStatusBadge()}
+        <div className="mb-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-2xl font-bold text-foreground">{quiz.name}</h1>
+                {getStatusBadge()}
+              </div>
+              <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="mt-2">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                返回
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2 ml-4">
+              <QuizActions quiz={quiz} />
             </div>
           </div>
-          <QuizActions quiz={quiz} />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -175,23 +179,6 @@ const QuizDetail = () => {
                   </div>
                 </div>
 
-                {user?.role === 'teacher' && (
-                  <div className="flex items-center gap-3">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <div className="text-sm text-muted-foreground">学生</div>
-                      <div className="font-medium">{quiz.studentName}</div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-3">
-                  <Package className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">订单</div>
-                    <div className="font-medium">{quiz.orderName}</div>
-                  </div>
-                </div>
 
                 <div className="flex items-center gap-3">
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
