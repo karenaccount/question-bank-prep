@@ -74,10 +74,11 @@ const QuizActions = ({ quiz, onEdit, compact = false }: QuizActionsProps) => {
   };
 
   const handleToggleFavorite = () => {
+    const wasFavorite = quiz.isFavorite;
     toggleFavorite(quiz.id);
     toast({
-      title: quiz.isFavorite ? "已取消收藏" : "已加入收藏",
-      description: quiz.isFavorite ? "试卷已从收藏列表移除" : "试卷已加入收藏列表",
+      title: wasFavorite ? "已取消收藏" : "已加入收藏",
+      description: wasFavorite ? "试卷已从收藏列表移除" : "试卷已加入收藏列表",
     });
   };
 

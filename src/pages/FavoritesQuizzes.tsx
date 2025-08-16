@@ -21,11 +21,14 @@ import {
   Package,
   BookOpen,
   GraduationCap,
-  Zap
+  Zap,
+  Target,
+  Layers
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import QuizActions from "@/components/QuizActions";
 
 const FavoritesQuizzes = () => {
   const { user } = useAuth();
@@ -35,6 +38,8 @@ const FavoritesQuizzes = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [timeFilter, setTimeFilter] = useState("all");
   const [subjectFilter, setSubjectFilter] = useState("all");
+  const [knowledgePointFilter, setKnowledgePointFilter] = useState("all");
+  const [scenarioFilter, setScenarioFilter] = useState("all");
 
   const favoriteQuizzes = user ? getFavoriteQuizzes(user.id) : [];
 
@@ -46,11 +51,32 @@ const FavoritesQuizzes = () => {
     
     const matchesSubject = subjectFilter === "all" || quiz.course === subjectFilter;
     
-    return matchesSearch && matchesSubject;
+    // Time filter logic
+    const matchesTime = timeFilter === "all" || (() => {
+      const now = new Date();
+      const quizDate = new Date(quiz.createdAt);
+      switch (timeFilter) {
+        case "today":
+          return quizDate.toDateString() === now.toDateString();
+        case "week":
+          const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          return quizDate >= oneWeekAgo;
+        case "month":
+          const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+          return quizDate >= oneMonthAgo;
+        default:
+          return true;
+      }
+    })();
+    
+    return matchesSearch && matchesSubject && matchesTime;
   });
 
-  // Get unique subjects for filter
+  // Get unique values for filters
   const uniqueSubjects = [...new Set(favoriteQuizzes.map(quiz => quiz.course))];
+  // Mock data for knowledge points and scenarios - in real app these would come from quiz data
+  const knowledgePoints = ["概率论", "线性代数", "微积分", "数据结构", "算法"];
+  const scenarios = ["期中考试", "期末考试", "随堂测验", "作业练习", "竞赛训练"];
 
   const getStatusBadge = (quiz: any) => {
     if (quiz.isCompleted) {
@@ -88,8 +114,8 @@ const FavoritesQuizzes = () => {
             <CardTitle className="text-lg">筛选条件</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="md:col-span-2 lg:col-span-1">
                 <label className="text-sm font-medium mb-2 block">搜索</label>
                 <div className="relative">
                   <Input
@@ -100,6 +126,36 @@ const FavoritesQuizzes = () => {
                   />
                   <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 </div>
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium mb-2 block">时间</label>
+                <Select value={timeFilter} onValueChange={setTimeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择时间范围" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">全部时间</SelectItem>
+                    <SelectItem value="today">今天</SelectItem>
+                    <SelectItem value="week">本周</SelectItem>
+                    <SelectItem value="month">本月</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">知识点</label>
+                <Select value={knowledgePointFilter} onValueChange={setKnowledgePointFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择知识点" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">全部知识点</SelectItem>
+                    {knowledgePoints.map((point: string) => (
+                      <SelectItem key={point} value={point}>{point}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               
               <div>
@@ -118,16 +174,16 @@ const FavoritesQuizzes = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">时间</label>
-                <Select value={timeFilter} onValueChange={setTimeFilter}>
+                <label className="text-sm font-medium mb-2 block">场景类型</label>
+                <Select value={scenarioFilter} onValueChange={setScenarioFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="选择时间范围" />
+                    <SelectValue placeholder="选择场景类型" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">全部时间</SelectItem>
-                    <SelectItem value="today">今天</SelectItem>
-                    <SelectItem value="week">本周</SelectItem>
-                    <SelectItem value="month">本月</SelectItem>
+                    <SelectItem value="all">全部类型</SelectItem>
+                    {scenarios.map((scenario: string) => (
+                      <SelectItem key={scenario} value={scenario}>{scenario}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -162,7 +218,7 @@ const FavoritesQuizzes = () => {
                         <Heart className="h-4 w-4 text-red-500 fill-current" />
                       </div>
                       
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 text-sm text-muted-foreground">
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 text-sm text-muted-foreground mb-3">
                         <div className="flex items-center gap-2">
                           <Clock className="h-4 w-4" />
                           <span>{quiz.createdAt.toLocaleDateString()}</span>
@@ -181,18 +237,23 @@ const FavoritesQuizzes = () => {
                         </div>
                         
                         <div className="flex items-center gap-2">
+                          <Target className="h-4 w-4" />
+                          <span>概率论</span> {/* Mock knowledge point */}
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
                           <BookOpen className="h-4 w-4" />
                           <span>{quiz.course}</span>
                         </div>
                         
                         <div className="flex items-center gap-2">
-                          <GraduationCap className="h-4 w-4" />
-                          <span>{quiz.totalQuestions}题</span>
+                          <Layers className="h-4 w-4" />
+                          <span>期中考试</span> {/* Mock scenario type */}
                         </div>
                         
                         <div className="flex items-center gap-2">
-                          <Zap className="h-4 w-4" />
-                          <span>总分: {quiz.totalScore}分</span>
+                          <GraduationCap className="h-4 w-4" />
+                          <span>{quiz.totalQuestions}题/{quiz.totalScore}分</span>
                         </div>
                       </div>
                       
@@ -209,6 +270,7 @@ const FavoritesQuizzes = () => {
                       <Button asChild variant="outline" size="sm">
                         <Link to={`/quiz/${quiz.id}`}>查看详情</Link>
                       </Button>
+                      <QuizActions quiz={quiz} />
                     </div>
                   </div>
                 </CardContent>
