@@ -30,8 +30,7 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm">登录</Button>
-          <Button variant="default" size="sm">注册</Button>
+          <Button variant="outline" size="sm" onClick={() => window.location.href = '/auth'}>登录</Button>
         </div>
       </div>
     </header>
