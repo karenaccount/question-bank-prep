@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -15,7 +17,7 @@ import {
 import { 
   Heart, 
   Search, 
-  Calendar,
+  Calendar as CalendarIcon,
   Clock,
   User,
   Package,
@@ -26,6 +28,8 @@ import {
   Layers
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuizActions from "@/components/QuizActions";
@@ -35,11 +39,16 @@ const FavoritesQuizzes = () => {
   const { getFavoriteQuizzes } = useQuiz();
   const navigate = useNavigate();
   
-  const [searchQuery, setSearchQuery] = useState("");
-  const [timeFilter, setTimeFilter] = useState("all");
+  const [orderQuery, setOrderQuery] = useState("");
+  const [dateRange, setDateRange] = useState<{from?: Date; to?: Date}>({});
+  const [studentQuery, setStudentQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [knowledgePointFilter, setKnowledgePointFilter] = useState("all");
   const [scenarioFilter, setScenarioFilter] = useState("all");
+  
+  // State for dropdown visibility
+  const [orderDropdownOpen, setOrderDropdownOpen] = useState(false);
+  const [studentDropdownOpen, setStudentDropdownOpen] = useState(false);
 
   const favoriteQuizzes = user ? getFavoriteQuizzes(user.id) : [];
 
@@ -49,35 +58,32 @@ const FavoritesQuizzes = () => {
     const isFavorited = quiz.isFavorite;
     if (!isFavorited) return false;
     
-    const matchesSearch = quiz.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      quiz.studentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      quiz.orderName.toLowerCase().includes(searchQuery.toLowerCase());
-    
+    const matchesOrder = orderQuery === "" || quiz.orderName.toLowerCase().includes(orderQuery.toLowerCase());
+    const matchesStudent = studentQuery === "" || quiz.studentName.toLowerCase().includes(studentQuery.toLowerCase());
     const matchesSubject = subjectFilter === "all" || quiz.course === subjectFilter;
     
-    // Time filter logic
-    const matchesTime = timeFilter === "all" || (() => {
-      const now = new Date();
-      const quizDate = new Date(quiz.createdAt);
-      switch (timeFilter) {
-        case "today":
-          return quizDate.toDateString() === now.toDateString();
-        case "week":
-          const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          return quizDate >= oneWeekAgo;
-        case "month":
-          const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-          return quizDate >= oneMonthAgo;
-        default:
-          return true;
-      }
-    })();
+    // Date range filter
+    const matchesDate = !dateRange.from || !dateRange.to || 
+      (quiz.createdAt >= dateRange.from && quiz.createdAt <= dateRange.to);
     
-    return matchesSearch && matchesSubject && matchesTime;
+    return matchesOrder && matchesStudent && matchesSubject && matchesDate;
   });
 
   // Get unique values for filters
   const uniqueSubjects = [...new Set(favoriteQuizzes.map(quiz => quiz.course))];
+  const uniqueStudents = [...new Set(favoriteQuizzes.map(q => q.studentName))];
+  const uniqueOrders = [...new Set(favoriteQuizzes.map(q => q.orderName))];
+  
+  // Filter orders based on query
+  const filteredOrders = uniqueOrders.filter(order => 
+    order.toLowerCase().includes(orderQuery.toLowerCase())
+  );
+  
+  // Filter students based on query
+  const filteredStudents = uniqueStudents.filter(student => 
+    student.toLowerCase().includes(studentQuery.toLowerCase())
+  );
+  
   // Mock data for knowledge points and scenarios - in real app these would come from quiz data
   const knowledgePoints = ["概率论", "线性代数", "微积分", "数据结构", "算法"];
   const scenarios = ["期中考试", "期末考试", "随堂测验", "作业练习", "竞赛训练"];
@@ -97,19 +103,14 @@ const FavoritesQuizzes = () => {
       <Header />
       
       <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-              <Heart className="h-8 w-8 text-red-500" />
-              收藏的试卷
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              查看您收藏的所有试卷
-            </p>
-          </div>
-          <Button variant="outline" onClick={() => navigate(-1)}>
-            返回
-          </Button>
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
+            <Heart className="h-8 w-8 text-red-500" />
+            收藏的试卷
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            查看您收藏的所有试卷
+          </p>
         </div>
 
         {/* Filters */}
@@ -119,33 +120,104 @@ const FavoritesQuizzes = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div className="md:col-span-2 lg:col-span-1">
-                <label className="text-sm font-medium mb-2 block">搜索</label>
-                <div className="relative">
-                  <Input
-                    placeholder="搜索试卷名称、学生或订单..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pr-10"
-                  />
-                  <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                </div>
+              <div className="relative">
+                <label className="text-sm font-medium mb-2 block">订单号</label>
+                <Input
+                  placeholder="输入订单名称..."
+                  value={orderQuery}
+                  onChange={(e) => {
+                    setOrderQuery(e.target.value);
+                    setOrderDropdownOpen(e.target.value.length > 0);
+                  }}
+                  onFocus={() => setOrderDropdownOpen(orderQuery.length > 0)}
+                  onBlur={() => setTimeout(() => setOrderDropdownOpen(false), 200)}
+                />
+                {orderDropdownOpen && filteredOrders.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-md max-h-48 overflow-y-auto">
+                    {filteredOrders.map(order => (
+                      <div
+                        key={order}
+                        className="px-3 py-2 hover:bg-accent cursor-pointer text-sm"
+                        onClick={() => {
+                          setOrderQuery(order);
+                          setOrderDropdownOpen(false);
+                        }}
+                      >
+                        {order}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               <div>
-                <label className="text-sm font-medium mb-2 block">时间</label>
-                <Select value={timeFilter} onValueChange={setTimeFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="选择时间范围" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">全部时间</SelectItem>
-                    <SelectItem value="today">今天</SelectItem>
-                    <SelectItem value="week">本周</SelectItem>
-                    <SelectItem value="month">本月</SelectItem>
-                  </SelectContent>
-                </Select>
+                <label className="text-sm font-medium mb-2 block">时间段</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !dateRange.from && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {dateRange.from ? (
+                        dateRange.to ? (
+                          <>
+                            {format(dateRange.from, "yyyy-MM-dd")} - {format(dateRange.to, "yyyy-MM-dd")}
+                          </>
+                        ) : (
+                          format(dateRange.from, "yyyy-MM-dd")
+                        )
+                      ) : (
+                        "选择日期范围"
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="range"
+                      selected={{from: dateRange.from, to: dateRange.to}}
+                      onSelect={(range) => setDateRange(range || {})}
+                      numberOfMonths={2}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
+
+              {user?.role === 'teacher' && (
+                <div className="relative">
+                  <label className="text-sm font-medium mb-2 block">学生</label>
+                  <Input
+                    placeholder="输入学生姓名..."
+                    value={studentQuery}
+                    onChange={(e) => {
+                      setStudentQuery(e.target.value);
+                      setStudentDropdownOpen(e.target.value.length > 0);
+                    }}
+                    onFocus={() => setStudentDropdownOpen(studentQuery.length > 0)}
+                    onBlur={() => setTimeout(() => setStudentDropdownOpen(false), 200)}
+                  />
+                  {studentDropdownOpen && filteredStudents.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-popover border rounded-md shadow-md max-h-48 overflow-y-auto">
+                      {filteredStudents.map(student => (
+                        <div
+                          key={student}
+                          className="px-3 py-2 hover:bg-accent cursor-pointer text-sm"
+                          onClick={() => {
+                            setStudentQuery(student);
+                            setStudentDropdownOpen(false);
+                          }}
+                        >
+                          {student}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div>
                 <label className="text-sm font-medium mb-2 block">知识点</label>
@@ -196,85 +268,91 @@ const FavoritesQuizzes = () => {
         </Card>
 
         {/* Favorites List */}
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredQuizzes.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-12">
-                <Heart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium text-foreground mb-2">暂无收藏</h3>
-                <p className="text-muted-foreground">
-                  {searchQuery || subjectFilter !== "all" || timeFilter !== "all"
-                    ? "没有符合筛选条件的收藏试卷"
-                    : "您还没有收藏任何试卷"
-                  }
-                </p>
-              </CardContent>
-            </Card>
+            <div className="lg:col-span-2">
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Heart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-medium text-foreground mb-2">暂无收藏</h3>
+                  <p className="text-muted-foreground">
+                    {orderQuery || studentQuery || subjectFilter !== "all" || dateRange.from
+                      ? "没有符合筛选条件的收藏试卷"
+                      : "您还没有收藏任何试卷"
+                    }
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           ) : (
             filteredQuizzes.map((quiz) => (
               <Card key={quiz.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-foreground">{quiz.name}</h3>
-                        {getStatusBadge(quiz)}
-                        <Heart className="h-4 w-4 text-red-500 fill-current" />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 text-sm text-muted-foreground mb-3">
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          <span>{quiz.createdAt.toLocaleDateString()}</span>
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Link 
+                            to={`/quiz/${quiz.id}`}
+                            className="text-lg font-semibold text-foreground hover:text-primary transition-colors cursor-pointer"
+                          >
+                            {quiz.name}
+                          </Link>
+                          {getStatusBadge(quiz)}
+                          <Heart className="h-4 w-4 text-red-500 fill-current" />
                         </div>
                         
-                        {user?.role === 'teacher' && (
+                        <div className="grid grid-cols-2 gap-3 text-sm text-muted-foreground">
                           <div className="flex items-center gap-2">
-                            <User className="h-4 w-4" />
-                            <span>{quiz.studentName}</span>
+                            <Clock className="h-4 w-4" />
+                            <span>{quiz.createdAt.toLocaleDateString()}</span>
+                          </div>
+                          
+                          {user?.role === 'teacher' && (
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4" />
+                              <span>{quiz.studentName}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4" />
+                            <span>{quiz.orderName}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Target className="h-4 w-4" />
+                            <span>概率论</span> {/* Mock knowledge point */}
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <BookOpen className="h-4 w-4" />
+                            <span>{quiz.course}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Layers className="h-4 w-4" />
+                            <span>期中考试</span> {/* Mock scenario type */}
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <GraduationCap className="h-4 w-4" />
+                            <span>{quiz.totalQuestions}题/{quiz.totalScore}分</span>
+                          </div>
+                        </div>
+                        
+                        {quiz.isCompleted && quiz.studentScore !== undefined && (
+                          <div className="mt-3 text-sm">
+                            <span className="text-green-600 font-medium">
+                              学生得分: {quiz.studentScore}/{quiz.totalScore}分
+                            </span>
                           </div>
                         )}
-                        
-                        <div className="flex items-center gap-2">
-                          <Package className="h-4 w-4" />
-                          <span>{quiz.orderName}</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <Target className="h-4 w-4" />
-                          <span>概率论</span> {/* Mock knowledge point */}
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <BookOpen className="h-4 w-4" />
-                          <span>{quiz.course}</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <Layers className="h-4 w-4" />
-                          <span>期中考试</span> {/* Mock scenario type */}
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <GraduationCap className="h-4 w-4" />
-                          <span>{quiz.totalQuestions}题/{quiz.totalScore}分</span>
-                        </div>
                       </div>
                       
-                      {quiz.isCompleted && quiz.studentScore !== undefined && (
-                        <div className="mt-3 text-sm">
-                          <span className="text-green-600 font-medium">
-                            学生得分: {quiz.studentScore}/{quiz.totalScore}分
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    <div className="flex gap-2 ml-4">
-                      <Button asChild variant="outline" size="sm">
-                        <Link to={`/quiz/${quiz.id}`}>查看详情</Link>
-                      </Button>
-                      <QuizActions quiz={quiz} />
+                      <div className="ml-4">
+                        <QuizActions quiz={quiz} iconOnly />
+                      </div>
                     </div>
                   </div>
                 </CardContent>
