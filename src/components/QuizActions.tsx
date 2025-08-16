@@ -57,8 +57,7 @@ const QuizActions = ({ quiz, onEdit, compact = false, iconOnly = false }: QuizAc
   const canAnswer = isStudent && (!quiz.isCompleted || quiz.studentScore === undefined);
   
   // Check if this quiz is from favorites page
-  const isFromFavorites = window.location.pathname === '/favorites' || 
-    (window.location.pathname.includes('/quiz/') && document.referrer.includes('favorites'));
+  const isFromFavorites = window.location.pathname === '/favorites';
 
   const handleEdit = () => {
     if (onEdit) {
