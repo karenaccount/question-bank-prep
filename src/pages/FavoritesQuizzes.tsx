@@ -3,10 +3,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQuiz } from "@/contexts/QuizContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import {
@@ -19,7 +17,6 @@ import {
 import { 
   Heart, 
   Search, 
-  Calendar as CalendarIcon,
   Clock,
   User,
   Package,
@@ -30,7 +27,6 @@ import {
   Layers
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import QuizActions from "@/components/QuizActions";
 
@@ -166,40 +162,11 @@ const FavoritesQuizzes = () => {
               
               <div>
                 <label className="text-sm font-medium mb-2 block">时间段</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !dateRange.from && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {dateRange.from ? (
-                        dateRange.to ? (
-                          <>
-                            {format(dateRange.from, "yyyy-MM-dd")} - {format(dateRange.to, "yyyy-MM-dd")}
-                          </>
-                        ) : (
-                          format(dateRange.from, "yyyy-MM-dd")
-                        )
-                      ) : (
-                        "选择日期范围"
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="range"
-                      selected={dateRange.from && dateRange.to ? {from: dateRange.from, to: dateRange.to} : undefined}
-                      onSelect={(range) => setDateRange(range || {})}
-                      numberOfMonths={2}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
-                    />
-                  </PopoverContent>
-                </Popover>
+                <DateRangePicker
+                  value={dateRange.from && dateRange.to ? { from: dateRange.from, to: dateRange.to } : undefined}
+                  onChange={(range) => setDateRange(range || {})}
+                  placeholder="选择日期范围"
+                />
               </div>
 
 
