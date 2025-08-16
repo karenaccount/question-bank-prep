@@ -283,9 +283,9 @@ const FavoritesQuizzes = () => {
         </Card>
 
         {/* Favorites List */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-6">
           {filteredQuizzes.length === 0 ? (
-            <div className="lg:col-span-2">
+            <div>
               <Card>
                 <CardContent className="text-center py-12">
                   <Heart className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
