@@ -1,6 +1,17 @@
-import React from "react";
-import Datepicker from "react-tailwindcss-datepicker";
+import React, { useState } from "react";
+import { CalendarIcon, X } from "lucide-react";
+import { format } from "date-fns";
+import { zhCN } from "date-fns/locale";
 import { DateRange } from "react-day-picker";
+
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface SimpleDateRangePickerProps {
   value?: DateRange;
@@ -15,59 +26,148 @@ export function SimpleDateRangePicker({
   placeholder = "请选择日期范围",
   className = "",
 }: SimpleDateRangePickerProps) {
-  // Convert our DateRange format to the library's format
-  const convertToLibraryFormat = (range: DateRange | undefined) => {
-    if (!range) return null;
+  const [isOpen, setIsOpen] = useState(false);
+
+  const formatDateRange = (dateRange: DateRange | undefined) => {
+    if (!dateRange?.from) return placeholder;
     
-    return {
-      startDate: range.from || null,
-      endDate: range.to || null,
-    };
+    if (dateRange.to) {
+      if (dateRange.from.getTime() === dateRange.to.getTime()) {
+        return format(dateRange.from, "yyyy-MM-dd", { locale: zhCN });
+      }
+      return `${format(dateRange.from, "yyyy-MM-dd", { locale: zhCN })} 至 ${format(dateRange.to, "yyyy-MM-dd", { locale: zhCN })}`;
+    }
+    
+    return format(dateRange.from, "yyyy-MM-dd", { locale: zhCN });
   };
 
-  // Convert library format back to our DateRange format
-  const convertFromLibraryFormat = (value: any) => {
-    if (!value) {
-      onChange?.(undefined);
-      return;
-    }
-
-    let range: DateRange | undefined = undefined;
-    
-    if (value.startDate || value.endDate) {
-      range = {
-        from: value.startDate ? new Date(value.startDate) : undefined,
-        to: value.endDate ? new Date(value.endDate) : undefined,
-      };
-    }
-    
+  const handleSelect = (range: DateRange | undefined) => {
     onChange?.(range);
+    
+    // Close when both dates are selected
+    if (range?.from && range?.to) {
+      setTimeout(() => setIsOpen(false), 100);
+    }
+  };
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onChange?.(undefined);
+  };
+
+  const getQuickRange = (days: number): DateRange => {
+    const today = new Date();
+    const startDate = new Date();
+    startDate.setDate(today.getDate() - days + 1);
+    return { from: startDate, to: today };
   };
 
   return (
     <div className={className}>
-      <Datepicker
-        value={convertToLibraryFormat(value)}
-        onChange={convertFromLibraryFormat}
-        placeholder={placeholder}
-        separator="至"
-        displayFormat="YYYY-MM-DD"
-        readOnly={true}
-        showShortcuts={true}
-        configs={{
-          shortcuts: {
-            today: "今天",
-            yesterday: "昨天",
-            past: (period: number) => `最近 ${period} 天`,
-            currentMonth: "本月",
-            pastMonth: "上个月",
-          },
-        }}
-        inputClassName="w-full px-3 py-2 border border-input bg-background text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 rounded-md"
-        containerClassName="relative"
-        popoverDirection="down"
-        primaryColor="blue"
-      />
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-start text-left font-normal relative",
+              !value?.from && "text-muted-foreground"
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+            <span className="truncate">{formatDateRange(value)}</span>
+            {value?.from && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto h-4 w-4 p-0 hover:bg-transparent"
+                onClick={handleClear}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <div className="flex">
+            {/* Quick Select */}
+            <div className="border-r p-3 space-y-1 min-w-[100px]">
+              <div className="text-xs font-medium text-muted-foreground mb-2">
+                快捷选择
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-xs h-7"
+                onClick={() => {
+                  onChange?.(getQuickRange(7));
+                  setIsOpen(false);
+                }}
+              >
+                最近7天
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-xs h-7"
+                onClick={() => {
+                  onChange?.(getQuickRange(30));
+                  setIsOpen(false);
+                }}
+              >
+                最近30天
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-xs h-7"
+                onClick={() => {
+                  onChange?.(getQuickRange(90));
+                  setIsOpen(false);
+                }}
+              >
+                最近90天
+              </Button>
+              {value?.from && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-xs h-7 text-muted-foreground"
+                  onClick={() => {
+                    onChange?.(undefined);
+                    setIsOpen(false);
+                  }}
+                >
+                  清除
+                </Button>
+              )}
+            </div>
+
+            {/* Calendar */}
+            <div>
+              <div className="p-3 border-b bg-muted/20">
+                <p className="text-sm text-muted-foreground">
+                  {!value?.from 
+                    ? "请选择开始日期" 
+                    : !value?.to 
+                      ? "请选择结束日期" 
+                      : `${format(value.from, "MM月dd日", { locale: zhCN })} 至 ${format(value.to, "MM月dd日", { locale: zhCN })}`
+                  }
+                </p>
+              </div>
+              <Calendar
+                initialFocus
+                mode="range"
+                defaultMonth={value?.from}
+                selected={value}
+                onSelect={handleSelect}
+                numberOfMonths={1}
+                className="pointer-events-auto"
+                disabled={(date) => date > new Date()}
+              />
+            </div>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
