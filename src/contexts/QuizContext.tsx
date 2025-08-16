@@ -154,19 +154,81 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
     }
   };
 
-  // Load data when user changes
+  // Initialize with mock data for testing
   useEffect(() => {
-    if (user) {
+    if (!user) {
+      // Set mock data when not authenticated for testing
+      const mockQuizzes: Quiz[] = [
+        {
+          id: '1755360688795',
+          name: '数学基础测试',
+          orderName: '李明 - 高中数学辅导',
+          studentName: '李明',
+          course: '高中数学',
+          questions: [
+            {
+              id: 1,
+              type: 'single_choice',
+              title: '下列哪个选项正确描述了函数的定义？',
+              options: [
+                '函数是一个包含变量的表达式',
+                '函数是输入和输出之间的对应关系',
+                '函数只能包含数字',
+                '函数必须是线性的'
+              ],
+              correctAnswer: 1,
+              explanation: '函数是定义在某个数集上的单值对应关系，即每个输入值对应唯一的输出值。',
+              score: 5,
+              knowledgePoint: '函数基本概念'
+            }
+          ],
+          totalQuestions: 1,
+          totalScore: 5,
+          createdBy: 'teacher-1',
+          assignedTo: 'student-1',
+          isCompleted: false,
+          isFavorite: false,
+          createdAt: new Date('2024-01-15')
+        },
+        {
+          id: '2',
+          name: '英语词汇测验',
+          orderName: '张华 - 英语口语提升',
+          studentName: '张华',
+          course: '英语',
+          questions: [],
+          totalQuestions: 20,
+          totalScore: 100,
+          createdBy: 'teacher-1',
+          assignedTo: 'student-1',
+          isCompleted: true,
+          studentScore: 85,
+          isFavorite: true,
+          createdAt: new Date('2024-01-10'),
+          completedAt: new Date('2024-01-12')
+        }
+      ];
+      setQuizzes(mockQuizzes);
+      setWrongAnswers([]);
+      setLoading(false);
+    } else {
       fetchQuizzes();
       fetchWrongAnswers();
-    } else {
-      setQuizzes([]);
-      setWrongAnswers([]);
     }
   }, [user]);
 
   const saveQuiz = async (quizData: Omit<Quiz, 'id' | 'createdAt' | 'isCompleted'>) => {
-    if (!user) return;
+    if (!user) {
+      // Fallback to local storage for testing without authentication
+      const newQuiz: Quiz = {
+        ...quizData,
+        id: Date.now().toString(),
+        createdAt: new Date(),
+        isCompleted: false,
+      };
+      setQuizzes(prev => [newQuiz, ...prev]);
+      return;
+    }
 
     try {
       const { data, error } = await supabase
@@ -213,6 +275,16 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
   };
 
   const completeQuiz = async (quizId: string, score: number) => {
+    if (!user) {
+      // Local update for testing
+      setQuizzes(prev => prev.map(quiz => 
+        quiz.id === quizId 
+          ? { ...quiz, isCompleted: true, studentScore: score, completedAt: new Date() }
+          : quiz
+      ));
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('quizzes')
@@ -236,6 +308,13 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
   };
 
   const deleteQuiz = async (quizId: string) => {
+    if (!user) {
+      // Local update for testing
+      setQuizzes(prev => prev.filter(quiz => quiz.id !== quizId));
+      setWrongAnswers(prev => prev.filter(wa => wa.quizId !== quizId));
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('quizzes')
@@ -257,6 +336,16 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
   const toggleFavorite = async (quizId: string) => {
     const quiz = quizzes.find(q => q.id === quizId);
     if (!quiz) return;
+
+    if (!user) {
+      // Local update for testing
+      setQuizzes(prev => prev.map(q => 
+        q.id === quizId 
+          ? { ...q, isFavorite: !q.isFavorite }
+          : q
+      ));
+      return;
+    }
 
     try {
       const { error } = await supabase
