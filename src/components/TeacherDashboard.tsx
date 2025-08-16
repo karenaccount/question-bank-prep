@@ -388,80 +388,7 @@ const TeacherDashboard = () => {
 
         {/* 右侧模块 */}
         <div className="space-y-6">
-          {/* 我的收藏 */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Heart className="w-5 h-5 text-red-500" />
-                我的收藏
-              </CardTitle>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/favorites">查看全部</Link>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {user && getFavoriteQuizzes(user.id).filter(quiz => quiz.isFavorite).slice(0, 3).map((quiz) => (
-                  <Card key={quiz.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-sm font-semibold text-foreground">{quiz.name}</h3>
-                            {quiz.isCompleted ? (
-                              <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">已答题</Badge>
-                            ) : quiz.studentScore !== undefined ? (
-                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">答题中</Badge>
-                            ) : (
-                              <Badge variant="outline" className="text-xs">未答题</Badge>
-                            )}
-                            <Heart className="w-3 h-3 text-red-500 fill-current" />
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              <span>{quiz.createdAt.toLocaleDateString()}</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-1">
-                              <User className="h-3 w-3" />
-                              <span>{quiz.studentName}</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-1">
-                              <Package className="h-3 w-3" />
-                              <span>{quiz.orderName}</span>
-                            </div>
-                            
-                            <div className="flex items-center gap-1">
-                              <BookOpen className="h-3 w-3" />
-                              <span>{quiz.course}</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="ml-2 flex flex-col gap-1">
-                          <Button asChild variant="outline" size="sm" className="text-xs h-7">
-                            <Link to={`/quiz/${quiz.id}`}>查看详情</Link>
-                          </Button>
-                          <QuizActions quiz={quiz} compact />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                {(!user || getFavoriteQuizzes(user.id).filter(quiz => quiz.isFavorite).length === 0) && (
-                  <div className="text-center py-4">
-                    <Heart className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
-                    <p className="text-sm text-muted-foreground">暂无收藏试卷</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 试卷管理 */}
+          {/* 最近试卷 */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg">最近试卷</CardTitle>
@@ -541,6 +468,79 @@ const TeacherDashboard = () => {
                 {teacherQuizzes.length === 0 && (
                   <div className="text-center py-4">
                     <p className="text-sm text-muted-foreground">暂无试卷</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 我的收藏 */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Heart className="w-5 h-5 text-red-500" />
+                我的收藏
+              </CardTitle>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/favorites">查看全部</Link>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {user && getFavoriteQuizzes(user.id).filter(quiz => quiz.isFavorite).slice(0, 3).map((quiz) => (
+                  <Card key={quiz.id} className="hover:shadow-md transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-sm font-semibold text-foreground">{quiz.name}</h3>
+                            {quiz.isCompleted ? (
+                              <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">已答题</Badge>
+                            ) : quiz.studentScore !== undefined ? (
+                              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs">答题中</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs">未答题</Badge>
+                            )}
+                            <Heart className="w-3 h-3 text-red-500 fill-current" />
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              <span>{quiz.createdAt.toLocaleDateString()}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              <span>{quiz.studentName}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              <Package className="h-3 w-3" />
+                              <span>{quiz.orderName}</span>
+                            </div>
+                            
+                            <div className="flex items-center gap-1">
+                              <BookOpen className="h-3 w-3" />
+                              <span>{quiz.course}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="ml-2 flex flex-col gap-1">
+                          <Button asChild variant="outline" size="sm" className="text-xs h-7">
+                            <Link to={`/quiz/${quiz.id}`}>查看详情</Link>
+                          </Button>
+                          <QuizActions quiz={quiz} compact />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {(!user || getFavoriteQuizzes(user.id).filter(quiz => quiz.isFavorite).length === 0) && (
+                  <div className="text-center py-4">
+                    <Heart className="w-8 h-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+                    <p className="text-sm text-muted-foreground">暂无收藏试卷</p>
                   </div>
                 )}
               </div>
