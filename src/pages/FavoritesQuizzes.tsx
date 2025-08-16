@@ -301,10 +301,10 @@ const FavoritesQuizzes = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                          <div className="flex items-center gap-3 mb-2">
-                           <Link 
-                             to={`/quiz/${quiz.id}`}
-                             className="text-lg font-semibold text-foreground hover:text-primary transition-colors cursor-pointer"
-                           >
+                            <Link 
+                              to={`/quiz/${quiz.id}?from=favorites`}
+                              className="text-lg font-semibold text-foreground hover:text-primary transition-colors cursor-pointer"
+                            >
                              {quiz.name}
                            </Link>
                            <Heart className="h-4 w-4 text-red-500 fill-current" />

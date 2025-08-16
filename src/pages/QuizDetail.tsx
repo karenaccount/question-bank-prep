@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuiz } from "@/contexts/QuizContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,8 +31,11 @@ import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "r
 const QuizDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { quizzes } = useQuiz();
+  
+  const isFromFavorites = searchParams.get('from') === 'favorites';
   
   const quiz = quizzes.find(q => q.id === id);
   const [showAllAnswers, setShowAllAnswers] = useState(false);
@@ -158,7 +161,7 @@ const QuizDetail = () => {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2 ml-4">
-              <QuizActions quiz={quiz} />
+              <QuizActions quiz={quiz} isFromFavorites={isFromFavorites} />
             </div>
           </div>
         </div>
