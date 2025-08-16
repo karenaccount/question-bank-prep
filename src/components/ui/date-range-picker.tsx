@@ -44,9 +44,9 @@ export function DateRangePicker({
   const handleSelect = (range: DateRange | undefined) => {
     onChange?.(range)
     
-    // Close popover when both dates are selected
-    if (range?.from && range?.to) {
-      setIsOpen(false)
+    // Only close popover when both dates are selected and they are different days
+    if (range?.from && range?.to && range.from !== range.to) {
+      setTimeout(() => setIsOpen(false), 100)
     }
   }
 
@@ -86,7 +86,7 @@ export function DateRangePicker({
                 ? "请选择开始日期" 
                 : !value?.to 
                   ? "请选择结束日期" 
-                  : "已选择日期范围"
+                  : `已选择 ${format(value.from, "MM月dd日")} 至 ${format(value.to, "MM月dd日")}`
               }
             </p>
           </div>
@@ -98,6 +98,7 @@ export function DateRangePicker({
             onSelect={handleSelect}
             numberOfMonths={2}
             className="pointer-events-auto"
+            disabled={(date) => date > new Date()}
           />
         </PopoverContent>
       </Popover>
