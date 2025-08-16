@@ -88,9 +88,9 @@ export function AppSidebar({ activeView, onViewChange }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarContent>
 
-      {/* Footer with Auth */}
-      <SidebarFooter className="p-4 border-t">
-        {isAuthenticated && user ? (
+      {/* Footer with Auth - Only show when authenticated */}
+      {isAuthenticated && user && (
+        <SidebarFooter className="p-4 border-t">
           <div className="space-y-3">
             {/* User Info */}
             <div className="flex items-center gap-3 px-2">
@@ -120,16 +120,8 @@ export function AppSidebar({ activeView, onViewChange }: AppSidebarProps) {
               退出登录
             </Button>
           </div>
-        ) : (
-          <Button
-            className="w-full gap-2"
-            onClick={handleAuthAction}
-          >
-            <LogIn className="w-4 h-4" />
-            登录
-          </Button>
-        )}
-      </SidebarFooter>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 }
