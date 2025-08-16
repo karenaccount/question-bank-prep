@@ -213,7 +213,9 @@ const QuizList = () => {
 
         {/* Quiz List */}
         <div className="space-y-6">
-          {filteredQuizzes.length === 0 ? (
+          {filteredQuizzes
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .length === 0 ? (
             <div>
               <Card>
                 <CardContent className="text-center py-12">
@@ -229,7 +231,9 @@ const QuizList = () => {
               </Card>
             </div>
           ) : (
-            filteredQuizzes.map((quiz) => (
+            filteredQuizzes
+              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+              .map((quiz) => (
               <Card key={quiz.id} className="hover:shadow-md transition-shadow">
                 <CardContent className="p-6">
                   <div className="space-y-4">
