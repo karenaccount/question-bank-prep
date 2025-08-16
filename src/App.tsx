@@ -12,7 +12,6 @@ import QuizDetail from "./pages/QuizDetail";
 import WrongAnswersBook from "./pages/WrongAnswersBook";
 import FavoritesQuizzes from "./pages/FavoritesQuizzes";
 import NotFound from "./pages/NotFound";
-import QuizEditor from "./components/QuizEditor";
 
 const queryClient = new QueryClient();
 
@@ -29,7 +28,6 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/quiz-list" element={<QuizList />} />
               <Route path="/quiz/:id" element={<QuizDetail />} />
-              <Route path="/quiz/:id/edit" element={<QuizEditor questions={[]} config={{}} onBack={() => {}} onSave={() => {}} />} />
               <Route path="/wrong-answers" element={<WrongAnswersBook />} />
               <Route path="/favorites" element={<FavoritesQuizzes />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

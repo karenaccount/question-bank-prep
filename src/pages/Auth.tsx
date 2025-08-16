@@ -30,16 +30,6 @@ const Auth = () => {
       return;
     }
 
-    // Check password length for Supabase requirements
-    if (password.length < 6) {
-      toast({
-        variant: "destructive",
-        title: "密码错误",
-        description: "密码至少需要6个字符",
-      });
-      return;
-    }
-
     try {
       await login(email, password, selectedRole);
       toast({
@@ -118,7 +108,7 @@ const Auth = () => {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="请输入密码（至少6个字符）"
+                  placeholder="请输入密码"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
