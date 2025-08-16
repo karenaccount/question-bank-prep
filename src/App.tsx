@@ -7,6 +7,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { QuizProvider } from "@/contexts/QuizContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import QuizList from "./pages/QuizList";
+import QuizDetail from "./pages/QuizDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +24,8 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/quiz-list" element={<QuizList />} />
+              <Route path="/quiz/:id" element={<QuizDetail />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>

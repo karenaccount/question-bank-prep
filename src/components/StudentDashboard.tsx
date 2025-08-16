@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 import { FileText, Clock, CheckCircle, XCircle, Play } from "lucide-react";
 import { useQuiz } from "@/contexts/QuizContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,10 +30,15 @@ const StudentDashboard = () => {
     <div className="container mx-auto px-4 py-8">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-6 h-6" />
-            我的试卷
-          </CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="w-6 h-6" />
+              我的试卷
+            </CardTitle>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/quiz-list">查看全部</Link>
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -82,13 +88,15 @@ const StudentDashboard = () => {
                     {/* 操作按钮 */}
                     <div className="pt-2">
                       {quiz.isCompleted ? (
-                        <Button variant="outline" className="w-full">
-                          查看详情
+                        <Button variant="outline" className="w-full" asChild>
+                          <Link to={`/quiz/${quiz.id}`}>查看详情</Link>
                         </Button>
                       ) : (
-                        <Button className="w-full gap-2">
-                          <Play className="w-4 h-4" />
-                          开始答题
+                        <Button className="w-full gap-2" asChild>
+                          <Link to={`/quiz/${quiz.id}`}>
+                            <Play className="w-4 h-4" />
+                            开始答题
+                          </Link>
                         </Button>
                       )}
                     </div>

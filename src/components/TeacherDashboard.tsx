@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 import { Search, Plus, FileText, Clock, BarChart3, CheckCircle } from "lucide-react";
 import { mockOrders, Order } from "@/data/mockOrders";
 import FastQuizMode from "./FastQuizMode";
@@ -299,7 +300,9 @@ const TeacherDashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-lg">最近试卷</CardTitle>
-              <Button variant="ghost" size="sm">查看全部</Button>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/quiz-list">查看全部</Link>
+              </Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
