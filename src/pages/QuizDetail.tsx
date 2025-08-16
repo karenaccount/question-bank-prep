@@ -17,11 +17,18 @@ import {
   Calendar,
   GraduationCap,
   Eye,
-  EyeOff
+  EyeOff,
+  Clock,
+  Target,
+  TrendingUp,
+  CheckCircle,
+  XCircle
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import QuizActions from "@/components/QuizActions";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
 
 const QuizDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -85,6 +92,59 @@ const QuizDetail = () => {
     }
   };
 
+  const isAnswerCorrect = (question: any) => {
+    return question.studentAnswer === question.correctAnswer;
+  };
+
+  const getCompletionDuration = () => {
+    if (!quiz.completedAt || !quiz.createdAt) return "未完成";
+    const duration = quiz.completedAt.getTime() - quiz.createdAt.getTime();
+    const minutes = Math.floor(duration / (1000 * 60));
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    
+    if (hours > 0) {
+      return `${hours}小时${remainingMinutes}分钟`;
+    }
+    return `${minutes}分钟`;
+  };
+
+  const getKnowledgePointStats = () => {
+    if (!quiz.isCompleted) return [];
+    
+    const knowledgeStats: Record<string, { total: number; correct: number }> = {};
+    
+    quiz.questions.forEach((question: any) => {
+      const kp = question.knowledgePoint || "其他";
+      if (!knowledgeStats[kp]) {
+        knowledgeStats[kp] = { total: 0, correct: 0 };
+      }
+      knowledgeStats[kp].total++;
+      if (isAnswerCorrect(question)) {
+        knowledgeStats[kp].correct++;
+      }
+    });
+
+    // Get top 5 knowledge points by question count
+    const sortedKnowledgePoints = Object.entries(knowledgeStats)
+      .sort(([, a], [, b]) => b.total - a.total)
+      .slice(0, 5)
+      .map(([name, stats]) => ({
+        subject: name,
+        accuracy: Math.round((stats.correct / stats.total) * 100),
+        fullMark: 100
+      }));
+
+    return sortedKnowledgePoints;
+  };
+
+  const chartConfig = {
+    accuracy: {
+      label: "正确率",
+      color: "hsl(var(--primary))",
+    },
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -107,7 +167,7 @@ const QuizDetail = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Quiz Info */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>试卷信息</CardTitle>
@@ -182,6 +242,70 @@ const QuizDetail = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Quiz Analysis */}
+            {quiz.isCompleted && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>答题结果分析</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                      <Target className="h-5 w-5 text-primary" />
+                      <div>
+                        <div className="text-sm text-muted-foreground">得分</div>
+                        <div className="text-lg font-bold">{quiz.studentScore}分</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                      <TrendingUp className="h-5 w-5 text-green-600" />
+                      <div>
+                        <div className="text-sm text-muted-foreground">正确率</div>
+                        <div className="text-lg font-bold">
+                          {Math.round((quiz.studentScore / quiz.totalScore) * 100)}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                    <Clock className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <div className="text-sm text-muted-foreground">完成时长</div>
+                      <div className="text-lg font-bold">{getCompletionDuration()}</div>
+                    </div>
+                  </div>
+
+                  {getKnowledgePointStats().length > 0 && (
+                    <div>
+                      <div className="text-sm font-medium mb-3">知识点掌握情况</div>
+                      <ChartContainer
+                        config={chartConfig}
+                        className="mx-auto aspect-square max-h-[250px]"
+                      >
+                        <RadarChart data={getKnowledgePointStats()}>
+                          <ChartTooltip
+                            cursor={false}
+                            content={<ChartTooltipContent />}
+                          />
+                          <PolarAngleAxis dataKey="subject" tick={{ fontSize: 12 }} />
+                          <PolarGrid />
+                          <Radar
+                            dataKey="accuracy"
+                            fill="var(--color-accuracy)"
+                            fillOpacity={0.6}
+                            stroke="var(--color-accuracy)"
+                            strokeWidth={2}
+                          />
+                        </RadarChart>
+                      </ChartContainer>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Questions */}
@@ -235,31 +359,80 @@ const QuizDetail = () => {
                           
                           {question.options && (
                             <div className="space-y-2 mb-4">
-                              {question.options.map((option: string, optIndex: number) => (
-                                <div 
-                                  key={optIndex} 
-                                  className={`p-2 rounded border ${
-                                    question.studentAnswer === String.fromCharCode(65 + optIndex)
-                                      ? 'bg-blue-50 border-blue-200'
-                                      : 'bg-gray-50 border-gray-200'
-                                  }`}
-                                >
-                                  <span className="font-medium mr-2">
-                                    {String.fromCharCode(65 + optIndex)}.
-                                  </span>
-                                  {option}
-                                  {question.studentAnswer === String.fromCharCode(65 + optIndex) && (
-                                    <span className="ml-2 text-blue-600 font-medium">(学生选择)</span>
-                                  )}
-                                </div>
-                              ))}
+                              {question.options.map((option: string, optIndex: number) => {
+                                const optionLetter = String.fromCharCode(65 + optIndex);
+                                const isStudentChoice = question.studentAnswer === optionLetter;
+                                const isCorrect = question.correctAnswer === optionLetter;
+                                
+                                return (
+                                  <div 
+                                    key={optIndex} 
+                                    className={`p-3 rounded border transition-colors ${
+                                      isStudentChoice && quiz.isCompleted
+                                        ? isCorrect
+                                          ? 'bg-green-50 border-green-200'
+                                          : 'bg-red-50 border-red-200'
+                                        : isCorrect && quiz.isCompleted && canViewAnswers()
+                                          ? 'bg-green-50 border-green-200'
+                                          : isStudentChoice
+                                            ? 'bg-blue-50 border-blue-200'
+                                            : 'bg-gray-50 border-gray-200'
+                                    }`}
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-medium">
+                                          {optionLetter}.
+                                        </span>
+                                        <span>{option}</span>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {isStudentChoice && (
+                                          <span className="text-blue-600 font-medium text-sm">
+                                            学生选择
+                                          </span>
+                                        )}
+                                        {quiz.isCompleted && isStudentChoice && (
+                                          isCorrect ? (
+                                            <CheckCircle className="h-4 w-4 text-green-600" />
+                                          ) : (
+                                            <XCircle className="h-4 w-4 text-red-600" />
+                                          )
+                                        )}
+                                        {quiz.isCompleted && canViewAnswers() && isCorrect && !isStudentChoice && (
+                                          <span className="text-green-600 font-medium text-sm">
+                                            正确答案
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
                             </div>
                           )}
 
                           {question.studentAnswer && !question.options && (
-                            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
-                              <div className="text-sm text-muted-foreground mb-1">学生答案:</div>
-                              <div className="font-medium">{question.studentAnswer}</div>
+                            <div className={`mb-4 p-3 border rounded ${
+                              quiz.isCompleted
+                                ? isAnswerCorrect(question)
+                                  ? 'bg-green-50 border-green-200'
+                                  : 'bg-red-50 border-red-200'
+                                : 'bg-blue-50 border-blue-200'
+                            }`}>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="text-sm text-muted-foreground mb-1">学生答案:</div>
+                                  <div className="font-medium">{question.studentAnswer}</div>
+                                </div>
+                                {quiz.isCompleted && (
+                                  isAnswerCorrect(question) ? (
+                                    <CheckCircle className="h-5 w-5 text-green-600" />
+                                  ) : (
+                                    <XCircle className="h-5 w-5 text-red-600" />
+                                  )
+                                )}
+                              </div>
                             </div>
                           )}
                         </div>
