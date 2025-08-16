@@ -66,25 +66,20 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
             setCompletedSteps(prev => [...prev, step.id]);
             
             if (currentStep === generationSteps.length - 1) {
-              // Start typewriter effect for the last step immediately when it reaches 100%
-              setTimeout(() => {
-                startTypewriterEffect();
-              }, 500);
-            } else if (currentStep === generationSteps.length - 2) {
-              // When step 2 completes, move to step 3 and immediately start typewriter
-              setTimeout(() => {
-                setCurrentStep(prev => prev + 1);
-                setProgress(0);
-                // Start typewriter effect immediately when step 3 starts
-                setTimeout(() => {
-                  startTypewriterEffect();
-                }, 100);
-              }, 500);
+              // Last step completed, generation finished
+              return;
             } else {
-              // Move to next step normally
+              // Move to next step
               setTimeout(() => {
                 setCurrentStep(prev => prev + 1);
                 setProgress(0);
+                
+                // If moving to the last step (step 3), start typewriter after a short delay
+                if (currentStep === generationSteps.length - 2) {
+                  setTimeout(() => {
+                    startTypewriterEffect();
+                  }, 1000);
+                }
               }, 500);
             }
           }
