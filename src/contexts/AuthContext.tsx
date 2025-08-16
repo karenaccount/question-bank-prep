@@ -32,15 +32,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(() => {
-    // Initialize with mock teacher user for testing
-    return {
-      id: 'teacher-1',
-      email: 'teacher@test.com',
-      role: 'teacher',
-      displayName: '测试老师'
-    };
-  });
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
 
   // Check current user session
