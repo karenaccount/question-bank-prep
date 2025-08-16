@@ -62,8 +62,8 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
   const [quizName, setQuizName] = useState(() => {
     const today = new Date();
     const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-    const scenarioName = config.scenarioName || "测验";
-    const studentName = config.studentName || "学生";
+    const scenarioName = config?.scenarioName || "测验";
+    const studentName = config?.studentName || "学生";
     return `${studentName} ${scenarioName} ${dateStr}`;
   });
 
