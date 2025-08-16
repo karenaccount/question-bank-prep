@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import teacherLogo from '@/assets/teacher-logo.png';
+import IntelligentGeneration from "@/components/IntelligentGeneration";
+import AnswerStatistics from "@/components/AnswerStatistics";
 import WelcomeMessage from "@/components/WelcomeMessage";
 import TeacherDashboard from "@/components/TeacherDashboard";
 import StudentDashboard from "@/components/StudentDashboard";
@@ -21,7 +23,7 @@ const Index = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<'student' | 'teacher'>('teacher');
-  const [activeView, setActiveView] = useState<'home' | 'quiz-list' | 'favorites' | 'login'>('home');
+  const [activeView, setActiveView] = useState<'intelligent-generation' | 'quiz-list' | 'favorites' | 'statistics' | 'login'>('intelligent-generation');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -137,11 +139,16 @@ const Index = () => {
     }
 
     switch (activeView) {
-      case 'home':
+      case 'intelligent-generation':
         return (
           <div className="min-h-screen bg-background">
-            <WelcomeMessage />
-            {user?.role === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />}
+            <IntelligentGeneration />
+          </div>
+        );
+      case 'statistics':
+        return (
+          <div className="min-h-screen bg-background">
+            <AnswerStatistics />
           </div>
         );
       case 'quiz-list':
@@ -153,8 +160,7 @@ const Index = () => {
       default:
         return (
           <div className="min-h-screen bg-background">
-            <WelcomeMessage />
-            {user?.role === 'teacher' ? <TeacherDashboard /> : <StudentDashboard />}
+            <IntelligentGeneration />
           </div>
         );
     }

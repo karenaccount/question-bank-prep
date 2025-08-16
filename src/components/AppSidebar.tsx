@@ -1,6 +1,7 @@
-import { Home, FileText, Heart, LogIn, LogOut, User } from "lucide-react";
+import { Brain, FileText, Heart, BarChart3, LogIn, LogOut, User } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import teacherLogo from "@/assets/teacher-logo.png";
+import WelcomeMessage from "@/components/WelcomeMessage";
 import {
   Sidebar,
   SidebarContent,
@@ -15,8 +16,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface AppSidebarProps {
-  activeView: 'home' | 'quiz-list' | 'favorites' | 'login';
-  onViewChange: (view: 'home' | 'quiz-list' | 'favorites' | 'login') => void;
+  activeView: 'intelligent-generation' | 'quiz-list' | 'favorites' | 'statistics' | 'login';
+  onViewChange: (view: 'intelligent-generation' | 'quiz-list' | 'favorites' | 'statistics' | 'login') => void;
 }
 
 export function AppSidebar({ activeView, onViewChange }: AppSidebarProps) {
@@ -24,9 +25,14 @@ export function AppSidebar({ activeView, onViewChange }: AppSidebarProps) {
 
   const menuItems = [
     { 
-      id: 'home' as const, 
-      title: '主页', 
-      icon: Home,
+      id: 'intelligent-generation' as const, 
+      title: '智能出题', 
+      icon: Brain,
+    },
+    { 
+      id: 'statistics' as const, 
+      title: '答题统计', 
+      icon: BarChart3,
     },
     { 
       id: 'quiz-list' as const, 
@@ -40,7 +46,7 @@ export function AppSidebar({ activeView, onViewChange }: AppSidebarProps) {
     },
   ];
 
-  const handleMenuClick = (viewId: 'home' | 'quiz-list' | 'favorites') => {
+  const handleMenuClick = (viewId: 'intelligent-generation' | 'quiz-list' | 'favorites' | 'statistics') => {
     if (!isAuthenticated) {
       onViewChange('login');
     } else {
@@ -90,7 +96,12 @@ export function AppSidebar({ activeView, onViewChange }: AppSidebarProps) {
 
       {/* Footer with Auth - Only show when authenticated */}
       {isAuthenticated && user && (
-        <SidebarFooter className="p-4 border-t">
+        <SidebarFooter className="p-4 border-t space-y-4">
+          {/* Welcome Message */}
+          <div className="px-2">
+            <WelcomeMessage />
+          </div>
+          
           <div className="space-y-3">
             {/* User Info */}
             <div className="flex items-center gap-3 px-2">

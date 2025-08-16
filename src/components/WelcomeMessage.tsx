@@ -24,12 +24,10 @@ const WelcomeMessage = () => {
   };
 
   return (
-    <div className="bg-muted/30 border-b border-border">
-      <div className="container mx-auto px-4 py-3">
-        <p className="text-sm text-muted-foreground text-center">
-          {getWelcomeMessage()}
-        </p>
-      </div>
+    <div className="text-center">
+      <p className="text-xs text-muted-foreground">
+        {getWelcomeMessage()}
+      </p>
     </div>
   );
 };
