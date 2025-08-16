@@ -253,11 +253,13 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
 
     return (
       <Dialog open={!!editingQuestion} onOpenChange={() => setEditingQuestion(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto pb-20">
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>编辑题目</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          
+          {/* Scrollable content area */}
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2">
             <div>
               <Label>题目类型</Label>
               <Input value={questionTypeLabels[editingQuestion.type as keyof typeof questionTypeLabels]} disabled />
@@ -350,15 +352,16 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
                 />
               </div>
             </div>
+          </div>
 
-            <div className="fixed bottom-4 right-4 flex gap-2 z-50">
-              <Button variant="outline" onClick={() => setEditingQuestion(null)} className="shadow-lg">
-                取消
-              </Button>
-              <Button onClick={handleSaveEdit} className="shadow-lg">
-                保存修改
-              </Button>
-            </div>
+          {/* Fixed bottom buttons */}
+          <div className="border-t pt-4 mt-4 flex justify-end gap-2 bg-background">
+            <Button variant="outline" onClick={() => setEditingQuestion(null)}>
+              取消
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              保存修改
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
