@@ -433,32 +433,81 @@ const StudentDashboard = () => {
             </TabsContent>
             
             <TabsContent value="knowledge" className="space-y-4 mt-4">
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">函数与方程</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500" style={{ width: '78%' }}></div>
-                    </div>
-                    <span className="text-xs font-medium">78%</span>
+              <div className="space-y-6">
+                {/* 知识点错误率柱状图 */}
+                <div>
+                  <h5 className="text-sm font-medium mb-3">知识点错误率 (前20个)</h5>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {[
+                      { name: '二次函数', errorRate: 65 },
+                      { name: '三角函数', errorRate: 58 },
+                      { name: '立体几何', errorRate: 52 },
+                      { name: '概率统计', errorRate: 48 },
+                      { name: '数列问题', errorRate: 45 },
+                      { name: '函数单调性', errorRate: 42 },
+                      { name: '向量运算', errorRate: 38 },
+                      { name: '圆锥曲线', errorRate: 35 },
+                      { name: '导数应用', errorRate: 32 },
+                      { name: '不等式', errorRate: 28 },
+                      { name: '对数函数', errorRate: 25 },
+                      { name: '排列组合', errorRate: 22 },
+                      { name: '平面几何', errorRate: 20 },
+                      { name: '指数函数', errorRate: 18 },
+                      { name: '集合运算', errorRate: 15 }
+                    ].map((point, index) => (
+                      <div key={index} className="flex items-center gap-3">
+                        <span className="text-xs text-muted-foreground w-16 text-right">
+                          {point.name}
+                        </span>
+                        <div className="flex-1 flex items-center gap-2">
+                          <div className="flex-1 h-3 bg-secondary rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-red-500 to-orange-500" 
+                              style={{ width: `${point.errorRate}%` }}
+                            ></div>
+                          </div>
+                          <span className="text-xs font-medium text-red-600 w-10">
+                            {point.errorRate}%
+                          </span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">几何图形</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
-                      <div className="h-full bg-yellow-500" style={{ width: '65%' }}></div>
+                
+                {/* 常考知识点词云 */}
+                <div>
+                  <h5 className="text-sm font-medium mb-3">常考知识点 (按出现频次)</h5>
+                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20 p-4 rounded-lg">
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {[
+                        { name: '函数与方程', freq: 89, size: 'text-lg' },
+                        { name: '几何图形', freq: 76, size: 'text-base' },
+                        { name: '数据分析', freq: 68, size: 'text-sm' },
+                        { name: '概率统计', freq: 65, size: 'text-sm' },
+                        { name: '代数运算', freq: 58, size: 'text-xs' },
+                        { name: '三角函数', freq: 52, size: 'text-xs' },
+                        { name: '立体几何', freq: 45, size: 'text-xs' },
+                        { name: '导数应用', freq: 42, size: 'text-xs' },
+                        { name: '向量运算', freq: 38, size: 'text-xs' },
+                        { name: '圆锥曲线', freq: 35, size: 'text-xs' },
+                        { name: '数列问题', freq: 32, size: 'text-xs' },
+                        { name: '不等式', freq: 28, size: 'text-xs' }
+                      ].map((point, index) => (
+                        <Badge 
+                          key={index} 
+                          variant="outline" 
+                          className={`${point.size} font-medium transition-all hover:scale-110 cursor-pointer`}
+                          style={{ 
+                            backgroundColor: `hsl(${200 + index * 15}, 70%, ${90 - point.freq / 5}%)`,
+                            borderColor: `hsl(${200 + index * 15}, 70%, ${70 - point.freq / 10}%)`
+                          }}
+                          title={`出现次数: ${point.freq}`}
+                        >
+                          {point.name}
+                        </Badge>
+                      ))}
                     </div>
-                    <span className="text-xs font-medium">65%</span>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">数据分析</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-16 h-2 bg-secondary rounded-full overflow-hidden">
-                      <div className="h-full bg-orange-500" style={{ width: '58%' }}></div>
-                    </div>
-                    <span className="text-xs font-medium">58%</span>
                   </div>
                 </div>
               </div>
