@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import QuizList from "./pages/QuizList";
 import QuizDetail from "./pages/QuizDetail";
+import QuizEdit from "./pages/QuizEdit";
 import WrongAnswersBook from "./pages/WrongAnswersBook";
 import FavoritesQuizzes from "./pages/FavoritesQuizzes";
 import NotFound from "./pages/NotFound";
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/quiz-list" element={<QuizList />} />
               <Route path="/quiz/:id" element={<QuizDetail />} />
+              <Route path="/quiz/:id/edit" element={<QuizEdit />} />
               <Route path="/wrong-answers" element={<WrongAnswersBook />} />
               <Route path="/favorites" element={<FavoritesQuizzes />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
