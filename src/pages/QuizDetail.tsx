@@ -178,13 +178,13 @@ const QuizDetail = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Quiz Info */}
-          <div className="lg:col-span-1 space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>试卷信息</CardTitle>
-              </CardHeader>
+            <div className="space-y-6">
+              {/* Quiz Info */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">{/* 试卷信息和分析结果并排显示 */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>试卷信息</CardTitle>
+                  </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex items-center gap-3">
@@ -272,11 +272,11 @@ const QuizDetail = () => {
                   </div>
                 )}
               </CardContent>
-            </Card>
+                </Card>
 
-            {/* Quiz Analysis */}
-            {quiz.isCompleted && (
-              <Card>
+                {/* Quiz Analysis */}
+                {quiz.isCompleted && (
+                  <Card>
                 <CardHeader>
                   <CardTitle>答题结果分析</CardTitle>
                 </CardHeader>
@@ -335,16 +335,15 @@ const QuizDetail = () => {
                     </div>
                   )}
                 </CardContent>
-              </Card>
-            )}
-          </div>
+                  </Card>
+                )}
+              </div>
 
-          {/* Questions */}
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>试卷题目</CardTitle>
+              {/* Questions */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>试卷题目</CardTitle>
                   {canViewAnswers() && (
                     <Button
                       variant="outline"
@@ -365,8 +364,8 @@ const QuizDetail = () => {
                       )}
                     </Button>
                   )}
-                </div>
-              </CardHeader>
+                  </div>
+                </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {quiz.questions.map((question: any, index: number) => (
@@ -521,7 +520,6 @@ const QuizDetail = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
           </div>
         </SidebarInset>
       </div>
