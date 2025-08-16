@@ -78,8 +78,27 @@ const FavoritesQuizzes = () => {
     const matchesScenario = scenarioFilter === "all"; // Scenario filtering disabled for now
     
     // Date range filter
-    const matchesDate = !dateRange?.from || !dateRange?.to || 
-      (quiz.createdAt >= dateRange.from && quiz.createdAt <= dateRange.to);
+    let matchesDate = true;
+    if (dateRange?.from || dateRange?.to) {
+      const quizDate = new Date(quiz.createdAt);
+      quizDate.setHours(0, 0, 0, 0); // Set to start of day for comparison
+      
+      if (dateRange.from && dateRange.to) {
+        const fromDate = new Date(dateRange.from);
+        const toDate = new Date(dateRange.to);
+        fromDate.setHours(0, 0, 0, 0);
+        toDate.setHours(23, 59, 59, 999); // Set to end of day for to date
+        matchesDate = quizDate >= fromDate && quizDate <= toDate;
+      } else if (dateRange.from) {
+        const fromDate = new Date(dateRange.from);
+        fromDate.setHours(0, 0, 0, 0);
+        matchesDate = quizDate >= fromDate;
+      } else if (dateRange.to) {
+        const toDate = new Date(dateRange.to);
+        toDate.setHours(23, 59, 59, 999);
+        matchesDate = quizDate <= toDate;
+      }
+    }
     
     return matchesOrder && matchesStudent && matchesSubject && matchesKnowledgePoint && matchesScenario && matchesDate;
   });
