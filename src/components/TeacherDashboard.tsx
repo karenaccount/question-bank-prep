@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, Plus, FileText, Clock, BarChart3, CheckCircle } from "lucide-react";
 import { mockOrders, Order } from "@/data/mockOrders";
+import FastQuizMode from "./FastQuizMode";
 
 const TeacherDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -12,6 +13,7 @@ const TeacherDashboard = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedMode, setSelectedMode] = useState<'fast' | 'detailed' | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showFastMode, setShowFastMode] = useState(false);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -40,6 +42,9 @@ const TeacherDashboard = () => {
 
   const handleModeSelect = (mode: 'fast' | 'detailed') => {
     setSelectedMode(mode);
+    if (mode === 'fast') {
+      setShowFastMode(true);
+    }
   };
 
   const handleStartGenerating = () => {
@@ -48,6 +53,30 @@ const TeacherDashboard = () => {
       alert(`开始为订单 ${selectedOrder.name} 生成试卷 (${selectedMode === 'fast' ? '快速模式' : '精细化模式'})`);
     }
   };
+
+  const handleFastModeGenerate = (config: any) => {
+    console.log('生成试卷配置:', config);
+    alert(`开始生成${config.scenario.name}试卷，题目数量：${config.config.questionCount}题`);
+    setShowFastMode(false);
+  };
+
+  const handleBackFromFastMode = () => {
+    setShowFastMode(false);
+    setSelectedMode(null);
+  };
+
+  // 如果显示快速模式界面
+  if (showFastMode && selectedOrder) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <FastQuizMode
+          order={selectedOrder}
+          onBack={handleBackFromFastMode}
+          onGenerate={handleFastModeGenerate}
+        />
+      </div>
+    );
+  }
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
