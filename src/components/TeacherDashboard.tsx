@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Plus, FileText, Clock, BarChart3, CheckCircle } from "lucide-react";
 import { mockOrders, Order } from "@/data/mockOrders";
 import FastQuizMode from "./FastQuizMode";
+import DetailedQuizMode from "./DetailedQuizMode";
 
 const TeacherDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -14,6 +15,7 @@ const TeacherDashboard = () => {
   const [selectedMode, setSelectedMode] = useState<'fast' | 'detailed' | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showFastMode, setShowFastMode] = useState(false);
+  const [showDetailedMode, setShowDetailedMode] = useState(false);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -44,6 +46,8 @@ const TeacherDashboard = () => {
     setSelectedMode(mode);
     if (mode === 'fast') {
       setShowFastMode(true);
+    } else if (mode === 'detailed') {
+      setShowDetailedMode(true);
     }
   };
 
@@ -60,8 +64,19 @@ const TeacherDashboard = () => {
     setShowFastMode(false);
   };
 
+  const handleDetailedModeGenerate = (config: any) => {
+    console.log('精细化出题配置:', config);
+    alert(`开始生成精细化试卷，总题数：${config.totalQuestions}题，总分：${config.calculatedScore}分`);
+    setShowDetailedMode(false);
+  };
+
   const handleBackFromFastMode = () => {
     setShowFastMode(false);
+    setSelectedMode(null);
+  };
+
+  const handleBackFromDetailedMode = () => {
+    setShowDetailedMode(false);
     setSelectedMode(null);
   };
 
@@ -75,6 +90,17 @@ const TeacherDashboard = () => {
           onGenerate={handleFastModeGenerate}
         />
       </div>
+    );
+  }
+
+  // 如果显示精细化模式界面
+  if (showDetailedMode && selectedOrder) {
+    return (
+      <DetailedQuizMode
+        order={selectedOrder}
+        onBack={handleBackFromDetailedMode}
+        onGenerate={handleDetailedModeGenerate}
+      />
     );
   }
   return (
