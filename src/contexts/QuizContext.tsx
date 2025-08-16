@@ -25,7 +25,10 @@ export interface WrongAnswer {
   questionId: string;
   quizId: string;
   quizName: string;
+  orderName: string;
   subject: string;
+  course: string;
+  scenarioType: string;
   question: any;
   studentAnswer: string;
   addedAt: Date;
@@ -144,7 +147,10 @@ export const QuizProvider: React.FC<QuizProviderProps> = ({ children }) => {
       questionId,
       quizId,
       quizName: quiz.name,
+      orderName: quiz.orderName,
       subject: quiz.course,
+      course: quiz.course,
+      scenarioType: 'pretest', // Default scenario type
       question,
       studentAnswer: question.studentAnswer || '',
       addedAt: new Date(),

@@ -2,17 +2,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { FileText, Clock, CheckCircle, XCircle, Play, Package, BookOpen, GraduationCap, Zap } from "lucide-react";
+import { FileText, Clock, CheckCircle, XCircle, Play, Package, BookOpen, GraduationCap, Zap, AlertCircle, Calendar, Trash2 } from "lucide-react";
 import QuizActions from "./QuizActions";
 import { useQuiz } from "@/contexts/QuizContext";
 import { useAuth } from "@/contexts/AuthContext";
 
 const StudentDashboard = () => {
-  const { getQuizzesByStudent } = useQuiz();
+  const { getQuizzesByStudent, wrongAnswers, removeFromWrongAnswers } = useQuiz();
   const { user } = useAuth();
   
   // Mock student ID - in real app this would come from user context
   const studentQuizzes = user ? getQuizzesByStudent('student-1') : [];
+  const userWrongAnswers = wrongAnswers.filter(item => item.userId === user?.id);
 
   const getTimeAgo = (date: Date) => {
     const now = new Date();
@@ -27,9 +28,25 @@ const StudentDashboard = () => {
     }
   };
 
+  const getQuestionTypeLabel = (type: string) => {
+    const typeMap: { [key: string]: string } = {
+      'single-choice': '单选题',
+      'multiple-choice': '多选题',
+      'true-false': '判断题',
+      'short-answer': '简答题',
+      'essay': '论述题'
+    };
+    return typeMap[type] || type;
+  };
+
+  const handleRemoveFromWrongAnswers = (questionId: string) => {
+    removeFromWrongAnswers(questionId);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card>
+      {/* 我的试卷 */}
+      <Card className="mb-8">
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle className="flex items-center gap-2">
@@ -124,6 +141,87 @@ const StudentDashboard = () => {
               <p className="text-muted-foreground">请等待老师为您分配试卷</p>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* 错题本 */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="w-6 h-6" />
+              错题本
+            </CardTitle>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/wrong-answers">查看全部</Link>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {userWrongAnswers.slice(0, 3).map((wrongAnswer) => (
+              <Card key={wrongAnswer.id} className="hover:shadow-md transition-shadow">
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Badge variant="outline">
+                          {getQuestionTypeLabel(wrongAnswer.question.type)}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          {wrongAnswer.quizName}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-muted-foreground mb-3">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>{wrongAnswer.addedAt.toLocaleDateString()}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <FileText className="h-4 w-4" />
+                          <span>{wrongAnswer.subject}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4" />
+                          <span>{wrongAnswer.course}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <GraduationCap className="h-4 w-4" />
+                          <span>{wrongAnswer.scenarioType}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-sm">
+                        <p className="text-foreground font-medium mb-1">题目：</p>
+                        <p className="text-muted-foreground line-clamp-2">{wrongAnswer.question.content}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col gap-2 ml-4">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleRemoveFromWrongAnswers(wrongAnswer.questionId)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {userWrongAnswers.length === 0 && (
+              <div className="text-center py-4">
+                <CheckCircle className="w-8 h-8 mx-auto mb-2 text-green-500 opacity-50" />
+                <p className="text-sm text-muted-foreground">暂无错题，继续保持！</p>
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
