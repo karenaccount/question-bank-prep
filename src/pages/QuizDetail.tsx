@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -22,7 +24,8 @@ import {
   Target,
   TrendingUp,
   CheckCircle,
-  XCircle
+  XCircle,
+  Lightbulb
 } from "lucide-react";
 import QuizActions from "@/components/QuizActions";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -145,28 +148,37 @@ const QuizDetail = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <div className="flex-1 px-4 py-6">
-        {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar 
+          activeView="quiz-list" 
+          onViewChange={() => {}} 
+        />
+        <SidebarInset className="flex-1">
+          <div className="px-4 py-6">
+            {/* Header */}
+            <div className="mb-6">
+              {/* Title and Back Button */}
+              <div className="flex items-center gap-4 mb-3">
+                <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  返回
+                </Button>
                 <h1 className="text-2xl font-bold text-foreground">{quiz.name}</h1>
-                {getStatusBadge()}
               </div>
-              <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="mt-2">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                返回
-              </Button>
+              
+              {/* Status and Actions */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {getStatusBadge()}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <QuizActions quiz={quiz} isFromFavorites={isFromFavorites} />
+                </div>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-2 ml-4">
-              <QuizActions quiz={quiz} isFromFavorites={isFromFavorites} />
-            </div>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Quiz Info */}
           <div className="lg:col-span-1 space-y-6">
             <Card>
@@ -174,29 +186,64 @@ const QuizDetail = () => {
                 <CardTitle>试卷信息</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">创建时间</div>
-                    <div className="font-medium">{quiz.createdAt.toLocaleString()}</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <div className="text-sm text-muted-foreground">创建时间</div>
+                      <div className="font-medium">{quiz.createdAt.toLocaleString()}</div>
+                    </div>
                   </div>
-                </div>
 
-
-                <div className="flex items-center gap-3">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">课程</div>
-                    <div className="font-medium">{quiz.course}</div>
+                  <div className="flex items-center gap-3">
+                    <BookOpen className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <div className="text-sm text-muted-foreground">课程</div>
+                      <div className="font-medium">{quiz.course}</div>
+                    </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-3">
-                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <div className="text-sm text-muted-foreground">题目数量</div>
-                    <div className="font-medium">{quiz.totalQuestions}题</div>
+                  <div className="flex items-center gap-3">
+                    <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <div className="text-sm text-muted-foreground">题目数量</div>
+                      <div className="font-medium">{quiz.totalQuestions}题</div>
+                    </div>
                   </div>
+
+                  <div className="flex items-center gap-3">
+                    <Lightbulb className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <div className="text-sm text-muted-foreground">知识点</div>
+                      <div className="font-medium">
+                        {quiz.questions && quiz.questions.length > 0 
+                          ? [...new Set(quiz.questions.map((q: any) => q.knowledgePoint).filter(Boolean))].join(', ') || '未分类'
+                          : '未分类'
+                        }
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Show student and order info only if NOT from favorites */}
+                  {!isFromFavorites && (
+                    <>
+                      <div className="flex items-center gap-3">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <div className="text-sm text-muted-foreground">学生</div>
+                          <div className="font-medium">{quiz.studentName || '未分配'}</div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <div className="text-sm text-muted-foreground">订单</div>
+                          <div className="font-medium">{quiz.orderName || '未关联'}</div>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <Separator />
@@ -473,8 +520,10 @@ const QuizDetail = () => {
             </Card>
           </div>
         </div>
+          </div>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
