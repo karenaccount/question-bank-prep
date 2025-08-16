@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,9 +14,17 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState<'student' | 'teacher'>('teacher');
   const [rememberPassword, setRememberPassword] = useState(false);
-  const { login } = useAuth();
+  
+  const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Redirect to home if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +44,7 @@ const Auth = () => {
         title: "登录成功",
         description: `欢迎您，${selectedRole === 'teacher' ? '老师' : '同学'}！`,
       });
-      navigate('/');
+      // Navigation will be handled by useEffect
     } catch (error) {
       toast({
         variant: "destructive",
