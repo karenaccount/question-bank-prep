@@ -82,9 +82,9 @@ const QuizGeneration = ({ config, onBack, onComplete }: QuizGenerationProps) => 
         return () => clearInterval(interval);
       }
       
-      // For step 3 (index 2), start typewriter effect immediately
+      // For step 3 (index 2), start typewriter effect after completing step 2
       if (currentStep === 2) {
-        // Start typewriter effect for step 3
+        // Start typewriter effect which will handle progress and completion
         setTimeout(() => {
           startTypewriterEffect();
         }, 500);
