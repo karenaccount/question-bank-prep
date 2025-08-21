@@ -523,9 +523,23 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
             </Button>
             <div>
               <h3 className="text-lg font-semibold">试卷预览与编辑</h3>
-              <p className="text-sm text-muted-foreground">
-                共{questions.length}题 | 总分{getTotalScore()}分
-              </p>
+              <div className="text-sm text-muted-foreground space-y-1">
+                <p>共{questions.length}题 | 总分{getTotalScore()}分</p>
+                {config?.questionTypes && (
+                  <div className="flex gap-4">
+                    {config.questionTypes.choice && config.questionTypes.choice.count > 0 && (
+                      <span>选择题: {config.questionTypes.choice.count}题
+                        {config?.settings?.useIndividualScores && ` (${config.questionTypes.choice.score}分/题)`}
+                      </span>
+                    )}
+                    {config.questionTypes.open && config.questionTypes.open.count > 0 && (
+                      <span>开放题: {config.questionTypes.open.count}题
+                        {config?.settings?.useIndividualScores && ` (${config.questionTypes.open.score}分/题)`}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
           <Button 

@@ -34,14 +34,8 @@ interface QuestionTypes {
 const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) => {
   const [selectedKnowledgePoints, setSelectedKnowledgePoints] = useState<string[]>([]);
   const [questionTypes, setQuestionTypes] = useState({
-    choice: 5,
-    open: 3
-  });
-  
-  const [examTypes, setExamTypes] = useState({
-    understanding: 40,
-    application: 40,
-    synthesis: 20
+    choice: { count: 5, score: 5 },
+    open: { count: 3, score: 10 }
   });
   
   const [difficultyDistribution, setDifficultyDistribution] = useState({
@@ -52,24 +46,36 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
   
   const [settings, setSettings] = useState({
     totalScore: 100,
-    duration: 90
+    duration: 90,
+    useIndividualScores: false
   });
+
+  // 计算总分值
+  const calculateTotalScore = () => {
+    if (settings.useIndividualScores) {
+      return questionTypes.choice.count * questionTypes.choice.score + 
+             questionTypes.open.count * questionTypes.open.score;
+    }
+    return settings.totalScore;
+  };
 
   const handleGenerate = () => {
     const config = {
       scenarioName: "精细化测验",
       knowledgePoints: selectedKnowledgePoints,
       questionTypes,
-      examTypes,
       difficultyDistribution,
-      settings
+      settings: {
+        ...settings,
+        totalScore: calculateTotalScore()
+      }
     };
     onGenerate(config);
   };
 
   const isConfigValid = () => {
     return selectedKnowledgePoints.length > 0 && 
-           (questionTypes.choice > 0 || questionTypes.open > 0);
+           (questionTypes.choice.count > 0 || questionTypes.open.count > 0);
   };
 
   return (
@@ -102,63 +108,16 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
             </CardContent>
           </Card>
 
-          {/* 考察类型与难度分布 */}
+          {/* 难度分布 */}
           <Card>
             <CardHeader>
-              <CardTitle>考察类型与难度分布</CardTitle>
+              <CardTitle>难度分布</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                <div>
-                  <p className="text-sm font-medium mb-4">考察类型</p>
-                  <div className="space-y-3">
-                    <label className="flex items-center justify-between">
-                      <span>理解记忆</span>
-                      <div className="flex items-center gap-2 w-32">
-                        <Slider
-                          value={[examTypes.understanding]}
-                          onValueChange={(value) => setExamTypes({...examTypes, understanding: value[0]})}
-                          max={100}
-                          step={5}
-                        />
-                        <span className="text-sm text-muted-foreground w-10">{examTypes.understanding}%</span>
-                      </div>
-                    </label>
-                    <label className="flex items-center justify-between">
-                      <span>应用分析</span>
-                      <div className="flex items-center gap-2 w-32">
-                        <Slider
-                          value={[examTypes.application]}
-                          onValueChange={(value) => setExamTypes({...examTypes, application: value[0]})}
-                          max={100}
-                          step={5}
-                        />
-                        <span className="text-sm text-muted-foreground w-10">{examTypes.application}%</span>
-                      </div>
-                    </label>
-                    <label className="flex items-center justify-between">
-                      <span>综合创新</span>
-                      <div className="flex items-center gap-2 w-32">
-                        <Slider
-                          value={[examTypes.synthesis]}
-                          onValueChange={(value) => setExamTypes({...examTypes, synthesis: value[0]})}
-                          max={100}
-                          step={5}
-                        />
-                        <span className="text-sm text-muted-foreground w-10">{examTypes.synthesis}%</span>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-                
-                <div>
-                  <p className="text-sm font-medium mb-4">难度分布</p>
-                  <DifficultyDistribution
-                    distribution={difficultyDistribution}
-                    onChange={setDifficultyDistribution}
-                  />
-                </div>
-              </div>
+              <DifficultyDistribution
+                distribution={difficultyDistribution}
+                onChange={setDifficultyDistribution}
+              />
             </CardContent>
           </Card>
         </div>
@@ -172,35 +131,94 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {/* 单题分值开关 */}
+                <div className="flex items-center justify-between">
+                  <Label>单题分值设置</Label>
+                  <Switch
+                    checked={settings.useIndividualScores}
+                    onCheckedChange={(checked) => setSettings({...settings, useIndividualScores: checked})}
+                  />
+                </div>
+                
                 <div className="space-y-3">
-                  <label className="flex items-center justify-between">
+                  <div className="flex items-center justify-between">
                     <span>选择题</span>
                     <div className="flex items-center gap-2">
                       <Input
                         type="number"
                         min="0"
                         max="50"
-                        value={questionTypes.choice}
-                        onChange={(e) => setQuestionTypes({...questionTypes, choice: parseInt(e.target.value) || 0})}
+                        value={questionTypes.choice.count}
+                        onChange={(e) => setQuestionTypes({
+                          ...questionTypes, 
+                          choice: { ...questionTypes.choice, count: parseInt(e.target.value) || 0 }
+                        })}
                         className="w-20 text-center"
                       />
                       <span className="text-sm text-muted-foreground">道</span>
+                      {settings.useIndividualScores && (
+                        <>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="20"
+                            value={questionTypes.choice.score}
+                            onChange={(e) => setQuestionTypes({
+                              ...questionTypes, 
+                              choice: { ...questionTypes.choice, score: parseInt(e.target.value) || 0 }
+                            })}
+                            className="w-20 text-center"
+                          />
+                          <span className="text-sm text-muted-foreground">分/题</span>
+                        </>
+                      )}
                     </div>
-                  </label>
-                  <label className="flex items-center justify-between">
+                  </div>
+                  <div className="flex items-center justify-between">
                     <span>开放题</span>
                     <div className="flex items-center gap-2">
                       <Input
                         type="number"
                         min="0"
                         max="50"
-                        value={questionTypes.open}
-                        onChange={(e) => setQuestionTypes({...questionTypes, open: parseInt(e.target.value) || 0})}
+                        value={questionTypes.open.count}
+                        onChange={(e) => setQuestionTypes({
+                          ...questionTypes, 
+                          open: { ...questionTypes.open, count: parseInt(e.target.value) || 0 }
+                        })}
                         className="w-20 text-center"
                       />
                       <span className="text-sm text-muted-foreground">道</span>
+                      {settings.useIndividualScores && (
+                        <>
+                          <Input
+                            type="number"
+                            min="0"
+                            max="20"
+                            value={questionTypes.open.score}
+                            onChange={(e) => setQuestionTypes({
+                              ...questionTypes, 
+                              open: { ...questionTypes.open, score: parseInt(e.target.value) || 0 }
+                            })}
+                            className="w-20 text-center"
+                          />
+                          <span className="text-sm text-muted-foreground">分/题</span>
+                        </>
+                      )}
                     </div>
-                  </label>
+                  </div>
+                </div>
+                
+                {/* 题目总数显示 */}
+                <div className="pt-2 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    题目总数：{questionTypes.choice.count + questionTypes.open.count} 道
+                  </div>
+                  {settings.useIndividualScores && (
+                    <div className="text-sm text-muted-foreground">
+                      计算总分：{calculateTotalScore()} 分
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -213,17 +231,18 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-4">
-                <div className="space-y-2">
-                  <Label>总分值</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="200"
-                    value={settings.totalScore}
-                    onChange={(e) => setSettings({...settings, totalScore: parseInt(e.target.value) || 0})}
-                    placeholder="100"
-                  />
-                </div>
+                 <div className="space-y-2">
+                   <Label>总分值</Label>
+                   <Input
+                     type="number"
+                     min="0"
+                     max="200"
+                     value={settings.useIndividualScores ? calculateTotalScore() : settings.totalScore}
+                     onChange={(e) => setSettings({...settings, totalScore: parseInt(e.target.value) || 0})}
+                     placeholder="100"
+                     disabled={settings.useIndividualScores}
+                   />
+                 </div>
                 <div className="space-y-2">
                   <Label>考试时长（分钟）</Label>
                   <Input
