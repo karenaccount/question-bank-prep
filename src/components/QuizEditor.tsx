@@ -13,7 +13,10 @@ import {
   Save, 
   GripVertical,
   Plus,
-  Eye
+  Eye,
+  EyeOff,
+  Copy,
+  Check
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
@@ -56,9 +59,72 @@ interface QuizEditorProps {
 }
 
 const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: QuizEditorProps) => {
-  const [questions, setQuestions] = useState<Question[]>(initialQuestions);
+  // Generate 5 preset questions based on question types
+  const generatePresetQuestions = (baseQuestions: Question[]): Question[] => {
+    const presetQuestions: Question[] = [
+      {
+        id: 1,
+        type: 'single_choice',
+        title: '以下哪个是React的核心概念？',
+        options: ['组件化', '面向对象', '函数式编程', '模块化'],
+        correctAnswer: 0,
+        explanation: 'React的核心概念是组件化，通过组件的方式构建用户界面。',
+        score: 5,
+        knowledgePoint: 'React基础概念'
+      },
+      {
+        id: 2,
+        type: 'single_choice',
+        title: 'JavaScript中用于声明变量的关键字有哪些？',
+        options: ['var, let, const', 'int, float, string', 'public, private', 'class, function'],
+        correctAnswer: 0,
+        explanation: 'JavaScript中用于声明变量的关键字包括var、let和const。',
+        score: 5,
+        knowledgePoint: 'JavaScript语法'
+      },
+      {
+        id: 3,
+        type: 'short_answer',
+        title: '请简述HTTP和HTTPS的主要区别。',
+        answer: 'HTTP是超文本传输协议，传输数据是明文的，不安全；HTTPS是在HTTP基础上加入了SSL/TLS加密，传输数据经过加密，更安全。HTTPS默认使用443端口，而HTTP使用80端口。',
+        explanation: '主要区别在于安全性：HTTPS通过SSL/TLS加密保护数据传输，而HTTP是明文传输。',
+        score: 10,
+        knowledgePoint: '网络协议'
+      },
+      {
+        id: 4,
+        type: 'single_choice',
+        title: '在数据库设计中，主键的作用是什么？',
+        options: ['唯一标识表中的每一行', '提高查询速度', '节省存储空间', '简化操作'],
+        correctAnswer: 0,
+        explanation: '主键的主要作用是唯一标识表中的每一行数据，确保数据的唯一性。',
+        score: 5,
+        knowledgePoint: '数据库设计'
+      },
+      {
+        id: 5,
+        type: 'short_answer',
+        title: '解释什么是MVC架构模式，并说明其优点。',
+        answer: 'MVC（Model-View-Controller）是一种软件架构模式，将应用程序分为三个组件：模型（Model）负责数据和业务逻辑，视图（View）负责用户界面，控制器（Controller）负责处理用户输入和协调模型与视图。优点包括：代码组织清晰、职责分离、易于维护和测试、支持并行开发。',
+        explanation: 'MVC模式通过分离关注点提高代码的可维护性和可扩展性。',
+        score: 15,
+        knowledgePoint: '软件架构'
+      }
+    ];
+    
+    // If no initial questions provided, return preset questions
+    if (baseQuestions.length === 0) {
+      return presetQuestions;
+    }
+    
+    return baseQuestions;
+  };
+
+  const [questions, setQuestions] = useState<Question[]>(() => generatePresetQuestions(initialQuestions));
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [hideAnswers, setHideAnswers] = useState(false);
+  const [copiedQuestionId, setCopiedQuestionId] = useState<number | null>(null);
   const [quizName, setQuizName] = useState(() => {
     const today = new Date();
     const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
@@ -144,6 +210,35 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
     return questions.reduce((sum, q) => sum + q.score, 0);
   };
 
+  const handleCopyQuestion = async (question: Question, index: number) => {
+    let copyText = `${index + 1}. ${question.title}\n\n`;
+    
+    if (question.options) {
+      question.options.forEach((option, optIndex) => {
+        copyText += `${String.fromCharCode(65 + optIndex)}. ${option}\n`;
+      });
+      copyText += '\n';
+    }
+    
+    if (question.answer && !hideAnswers) {
+      copyText += `参考答案：${question.answer}\n\n`;
+    }
+    
+    if (!hideAnswers) {
+      copyText += `解析：${question.explanation}\n`;
+      copyText += `知识点：${question.knowledgePoint}\n`;
+      copyText += `分值：${question.score}分`;
+    }
+
+    try {
+      await navigator.clipboard.writeText(copyText);
+      setCopiedQuestionId(question.id);
+      setTimeout(() => setCopiedQuestionId(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
   // Sortable Question Item Component
   const SortableQuestionItem = ({ question, index }: { question: Question; index: number }) => {
     const {
@@ -188,6 +283,18 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
               </div>
             </div>
             <div className="flex gap-1">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => handleCopyQuestion(question, index)}
+                className="relative"
+              >
+                {copiedQuestionId === question.id ? (
+                  <Check className="w-3 h-3 text-green-600" />
+                ) : (
+                  <Copy className="w-3 h-3" />
+                )}
+              </Button>
               <Button variant="ghost" size="sm" onClick={() => handleEditQuestion(question)}>
                 <Edit className="w-3 h-3" />
               </Button>
@@ -213,7 +320,7 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
                 {question.options.slice(0, 3).map((option, optIndex) => (
                   <div key={optIndex} className={cn(
                     "text-xs leading-tight line-clamp-1",
-                    question.correctAnswer === optIndex && "text-green-600 font-medium"
+                    !hideAnswers && question.correctAnswer === optIndex && "text-green-600 font-medium"
                   )}>
                     {String.fromCharCode(65 + optIndex)}. {option}
                   </div>
@@ -226,7 +333,7 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
               </div>
             )}
 
-            {question.answer && (
+            {question.answer && !hideAnswers && (
               <div>
                 <p className="text-xs leading-tight line-clamp-2">
                   <span className="font-medium">参考答案：</span>{question.answer}
@@ -235,14 +342,16 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
             )}
           </div>
 
-          <div className="text-xs text-muted-foreground border-t pt-2 mt-3 space-y-1">
-            <p className="line-clamp-2">
-              <span className="font-medium">解析：</span>{question.explanation}
-            </p>
-            <p className="line-clamp-1">
-              <span className="font-medium">知识点：</span>{question.knowledgePoint}
-            </p>
-          </div>
+          {!hideAnswers && (
+            <div className="text-xs text-muted-foreground border-t pt-2 mt-3 space-y-1">
+              <p className="line-clamp-2">
+                <span className="font-medium">解析：</span>{question.explanation}
+              </p>
+              <p className="line-clamp-1">
+                <span className="font-medium">知识点：</span>{question.knowledgePoint}
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -424,6 +533,23 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
               </p>
             </div>
           </div>
+          <Button 
+            variant="outline" 
+            onClick={() => setHideAnswers(!hideAnswers)}
+            className="gap-2"
+          >
+            {hideAnswers ? (
+              <>
+                <Eye className="w-4 h-4" />
+                展开所有答案
+              </>
+            ) : (
+              <>
+                <EyeOff className="w-4 h-4" />
+                隐藏所有答案
+              </>
+            )}
+          </Button>
         </div>
       </div>
 
@@ -437,7 +563,7 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
           items={questions.map(q => q.id)} 
           strategy={rectSortingStrategy}
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {questions.map((question, index) => (
               <SortableQuestionItem 
                 key={question.id} 
