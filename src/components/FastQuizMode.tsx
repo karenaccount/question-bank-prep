@@ -159,7 +159,6 @@ const FastQuizMode = ({ order, onBack, onGenerate }: FastQuizModeProps) => {
                     </div>
                     <div>
                       <h5 className="font-medium">{scenario.name}</h5>
-                      <p className="text-xs text-muted-foreground">{scenario.description}</p>
                     </div>
                   </div>
                   <div>

@@ -153,14 +153,16 @@ const KnowledgePointSelector = ({ order, selectedPoints, onChange }: KnowledgePo
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
               />
-            </div>
-            
-            {getSearchResults().length > 0 && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">可选知识点：</p>
-                <div className="max-h-32 overflow-y-auto space-y-1">
+              
+              {/* 下拉搜索结果 */}
+              {searchQuery.trim() && getSearchResults().length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-40 overflow-y-auto">
                   {getSearchResults().map((result, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 hover:bg-muted rounded">
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 p-2 hover:bg-muted cursor-pointer"
+                      onClick={() => handleTogglePendingPoint(result)}
+                    >
                       <Checkbox
                         checked={pendingPoints.includes(result)}
                         onCheckedChange={() => handleTogglePendingPoint(result)}
@@ -169,8 +171,8 @@ const KnowledgePointSelector = ({ order, selectedPoints, onChange }: KnowledgePo
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {pendingPoints.length > 0 && (
               <div className="space-y-2">
