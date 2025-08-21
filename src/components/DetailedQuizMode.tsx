@@ -32,12 +32,9 @@ interface QuestionTypes {
 
 const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) => {
   const [selectedKnowledgePoints, setSelectedKnowledgePoints] = useState<string[]>([]);
-  const [questionTypes, setQuestionTypes] = useState<QuestionTypes>({
-    single_choice: { enabled: true, count: 5, score: 2 },
-    multiple_choice: { enabled: false, count: 3, score: 3 },
-    fill_blank: { enabled: false, count: 5, score: 2 },
-    short_answer: { enabled: true, count: 3, score: 5 },
-    calculation: { enabled: false, count: 2, score: 8 }
+  const [questionTypes, setQuestionTypes] = useState({
+    choice: { enabled: true, count: 5, score: 2 },
+    open: { enabled: true, count: 3, score: 5 }
   });
   
   const [sourceRatio, setSourceRatio] = useState({ xiaoban: 70, realExam: 30 });
@@ -47,11 +44,8 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
   const [enableIndividualScoring, setEnableIndividualScoring] = useState(true);
 
   const questionTypeLabels = {
-    single_choice: '单选题',
-    multiple_choice: '多选题', 
-    fill_blank: '填空题',
-    short_answer: '简答题',
-    calculation: '计算题'
+    choice: '选择题',
+    open: '开放题'
   };
 
   const difficultyTypes = [
@@ -68,14 +62,14 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
     );
   };
 
-  const handleQuestionTypeToggle = (type: keyof QuestionTypes) => {
+  const handleQuestionTypeToggle = (type: 'choice' | 'open') => {
     setQuestionTypes(prev => ({
       ...prev,
       [type]: { ...prev[type], enabled: !prev[type].enabled }
     }));
   };
 
-  const handleQuestionTypeChange = (type: keyof QuestionTypes, field: 'count' | 'score', value: number) => {
+  const handleQuestionTypeChange = (type: 'choice' | 'open', field: 'count' | 'score', value: number) => {
     setQuestionTypes(prev => ({
       ...prev,
       [type]: { ...prev[type], [field]: value }
@@ -94,51 +88,24 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
       .reduce((sum, type) => sum + (type.count * type.score), 0);
   };
 
-  const handleDifficultyChange = (key: 'basic' | 'ability' | 'comprehensive', value: number) => {
-    const otherKeys = (['basic', 'ability', 'comprehensive'] as const).filter(k => k !== key);
-    
-    // 如果当前值为0，直接分配给其他两个
-    if (value === 0) {
-      const remaining = 100;
-      const [first, second] = otherKeys;
-      // 平均分配给其他两个
-      const halfRemaining = remaining / 2;
-      setDifficultyRatio({
-        [key]: 0,
-        [first]: halfRemaining,
-        [second]: halfRemaining
-      } as typeof difficultyRatio);
-      return;
-    }
-
-    // 计算剩余值
+  const handleDifficultyChange = (key: 'basic' | 'ability', value: number) => {
     const remaining = 100 - value;
-    const [first, second] = otherKeys;
-
-    // 如果其中一个为0，将所有剩余值给另一个
-    if (difficultyRatio[first] === 0) {
+    const otherKey = key === 'basic' ? 'ability' : 'basic';
+    const comprehensiveValue = 100 - value - remaining;
+    
+    // 当困难比例大于0时，简单和中等只能手动调节
+    if (difficultyRatio.comprehensive > 0) {
       setDifficultyRatio({
         ...difficultyRatio,
         [key]: value,
-        [second]: remaining
-      });
-    } else if (difficultyRatio[second] === 0) {
-      setDifficultyRatio({
-        ...difficultyRatio,
-        [key]: value,
-        [first]: remaining
+        [otherKey]: remaining
       });
     } else {
-      // 两个都不为0，按比例分配
-      const total = difficultyRatio[first] + difficultyRatio[second];
-      const firstRatio = difficultyRatio[first] / total;
-      const secondRatio = difficultyRatio[second] / total;
-      
+      // 当困难比例为0时，调节任一比例，另一个自动变化
       setDifficultyRatio({
-        ...difficultyRatio,
-        [key]: value,
-        [first]: Math.round(remaining * firstRatio),
-        [second]: Math.round(remaining * secondRatio)
+        basic: key === 'basic' ? value : remaining,
+        ability: key === 'ability' ? value : remaining,
+        comprehensive: 0
       });
     }
   };
@@ -186,159 +153,165 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* 左列 */}
-        <div className="space-y-6">
-          {/* 知识点选择 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">选择知识点</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <KnowledgePointSelector
-                order={order}
-                selectedPoints={selectedKnowledgePoints}
-                onChange={setSelectedKnowledgePoints}
-              />
-            </CardContent>
-          </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* 选择知识点 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">选择知识点</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <KnowledgePointSelector
+              order={order}
+              selectedPoints={selectedKnowledgePoints}
+              onChange={setSelectedKnowledgePoints}
+            />
+          </CardContent>
+        </Card>
 
-          {/* 题型配置 */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">题型配置</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Label className="text-xs">启用单题分值</Label>
-                  <Switch
-                    checked={enableIndividualScoring}
-                    onCheckedChange={setEnableIndividualScoring}
-                  />
-                </div>
+        {/* 题型配置 */}
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col gap-2">
+              <CardTitle className="text-base">题型配置</CardTitle>
+              <div className="flex items-center gap-2">
+                <Label className="text-xs">启用单题分值</Label>
+                <Switch
+                  checked={enableIndividualScoring}
+                  onCheckedChange={setEnableIndividualScoring}
+                />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(questionTypes).map(([type, config]) => (
-                  <div key={type} className="space-y-2">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <Checkbox
-                        checked={config.enabled}
-                        onCheckedChange={() => handleQuestionTypeToggle(type as keyof QuestionTypes)}
-                      />
-                      <span className="text-sm font-medium">
-                        {questionTypeLabels[type as keyof typeof questionTypeLabels]}
-                      </span>
-                    </label>
-                    
-                    {config.enabled && (
-                      <div className={`ml-6 grid ${enableIndividualScoring ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {Object.entries(questionTypes).map(([type, config]) => (
+                <div key={type} className="space-y-2">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={config.enabled}
+                      onCheckedChange={() => handleQuestionTypeToggle(type as 'choice' | 'open')}
+                    />
+                    <span className="text-sm font-medium">
+                      {questionTypeLabels[type as keyof typeof questionTypeLabels]}
+                    </span>
+                  </label>
+                  
+                  {config.enabled && (
+                    <div className="ml-6 space-y-3">
+                      <div>
+                        <Label className="text-xs">题目数量</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={config.count}
+                          onChange={(e) => handleQuestionTypeChange(
+                            type as 'choice' | 'open', 
+                            'count', 
+                            parseInt(e.target.value) || 0
+                          )}
+                          className="h-8"
+                        />
+                      </div>
+                      {enableIndividualScoring && (
                         <div>
-                          <Label className="text-xs">题目数量</Label>
+                          <Label className="text-xs">单题分值</Label>
                           <Input
                             type="number"
                             min="1"
-                            value={config.count}
+                            value={config.score}
                             onChange={(e) => handleQuestionTypeChange(
-                              type as keyof QuestionTypes, 
-                              'count', 
+                              type as 'choice' | 'open', 
+                              'score', 
                               parseInt(e.target.value) || 0
                             )}
                             className="h-8"
                           />
                         </div>
-                        {enableIndividualScoring && (
-                          <div>
-                            <Label className="text-xs">单题分值</Label>
-                            <Input
-                              type="number"
-                              min="1"
-                              value={config.score}
-                              onChange={(e) => handleQuestionTypeChange(
-                                type as keyof QuestionTypes, 
-                                'score', 
-                                parseInt(e.target.value) || 0
-                              )}
-                              className="h-8"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-                
-                <div className="pt-2 border-t text-sm text-muted-foreground">
-                  总题数：{getTotalQuestions()}题
-                  {enableIndividualScoring && ` | 计算总分：${getCalculatedTotalScore()}分`}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* 考察类型与难度分布 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">考察类型与难度分布</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {difficultyTypes.map((type) => (
-                <div key={type.key} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {type.icon}
-                      <span className="text-sm font-medium">{type.name}</span>
+                      )}
                     </div>
-                    <span className="text-sm">{difficultyRatio[type.key as keyof typeof difficultyRatio]}%</span>
-                  </div>
-                  <Slider
-                    value={[difficultyRatio[type.key as keyof typeof difficultyRatio]]}
-                    onValueChange={([value]) => handleDifficultyChange(type.key as 'basic' | 'ability' | 'comprehensive', value)}
-                    max={100}
-                    step={5}
-                  />
+                  )}
                 </div>
               ))}
-            </CardContent>
-          </Card>
-        </div>
+              
+              <div className="pt-2 border-t text-sm text-muted-foreground">
+                总题数：{getTotalQuestions()}题
+                {enableIndividualScoring && ` | 计算总分：${getCalculatedTotalScore()}分`}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* 右列 */}
-        <div className="space-y-6">
-          {/* 分值和时长设置 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">分值和时长设置</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label>总分</Label>
-                <Input
-                  type="number"
-                  value={enableIndividualScoring ? getCalculatedTotalScore() : totalScore}
-                  onChange={(e) => setTotalScore(parseInt(e.target.value) || 100)}
-                  disabled={enableIndividualScoring}
-                  className="mt-1"
-                />
-                {enableIndividualScoring && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    启用单题分值时，总分自动计算
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label>考试时长（分钟，选填）</Label>
-                <Input
-                  type="number"
-                  placeholder="不设置时长限制"
-                  value={duration || ''}
-                  onChange={(e) => setDuration(e.target.value ? parseInt(e.target.value) : null)}
-                  className="mt-1"
+        {/* 考察类型与难度分布 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">考察类型与难度分布</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {difficultyTypes.slice(0, 2).map((type) => (
+              <div key={type.key} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {type.icon}
+                    <span className="text-sm font-medium">{type.name}</span>
+                  </div>
+                  <span className="text-sm">{difficultyRatio[type.key as keyof typeof difficultyRatio]}%</span>
+                </div>
+                <Slider
+                  value={[difficultyRatio[type.key as keyof typeof difficultyRatio]]}
+                  onValueChange={([value]) => handleDifficultyChange(type.key as 'basic' | 'ability', value)}
+                  max={100}
+                  step={5}
                 />
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            ))}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {difficultyTypes[2].icon}
+                  <span className="text-sm font-medium">{difficultyTypes[2].name}</span>
+                </div>
+                <span className="text-sm">{difficultyRatio.comprehensive}%</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                困难比例自动调整
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* 分值和时长设置 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">分值和时长设置</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>总分</Label>
+              <Input
+                type="number"
+                value={enableIndividualScoring ? getCalculatedTotalScore() : totalScore}
+                onChange={(e) => setTotalScore(parseInt(e.target.value) || 100)}
+                disabled={enableIndividualScoring}
+                className="mt-1"
+              />
+              {enableIndividualScoring && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  启用单题分值时，总分自动计算
+                </p>
+              )}
+            </div>
+            <div>
+              <Label>考试时长（分钟，选填）</Label>
+              <Input
+                type="number"
+                placeholder="不设置时长限制"
+                value={duration || ''}
+                onChange={(e) => setDuration(e.target.value ? parseInt(e.target.value) : null)}
+                className="mt-1"
+              />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* 底部操作按钮 */}

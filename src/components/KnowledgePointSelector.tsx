@@ -18,18 +18,25 @@ const KnowledgePointSelector = ({ order, selectedPoints, onChange }: KnowledgePo
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [customPoints, setCustomPoints] = useState<string[]>([]);
+  const [pendingPoints, setPendingPoints] = useState<string[]>([]);
 
   const getAllKnowledgePoints = () => {
     const lecturePoints = order.lectureNotes.flatMap(note => note.knowledgePoints);
     return [...lecturePoints, ...customPoints];
   };
 
+  // 预置的知识点数据
+  const presetKnowledgePoints = ["知识点111", "知识点222", "知识点333"];
+  
   // 模拟搜索结果
-  const searchResults = searchQuery.trim() ? [
-    `${searchQuery} - 基础概念`,
-    `${searchQuery} - 应用技巧`,
-    `${searchQuery} - 实践方法`,
-  ].filter(point => !getAllKnowledgePoints().includes(point)) : [];
+  const getSearchResults = () => {
+    if (!searchQuery.trim()) return presetKnowledgePoints;
+    
+    const query = searchQuery.toLowerCase();
+    return presetKnowledgePoints.filter(point => 
+      point.toLowerCase().includes(query)
+    );
+  };
 
   const handlePointToggle = (point: string) => {
     if (selectedPoints.includes(point)) {
@@ -39,10 +46,19 @@ const KnowledgePointSelector = ({ order, selectedPoints, onChange }: KnowledgePo
     }
   };
 
-  const handleAddCustomPoints = (points: string[]) => {
-    const newCustomPoints = points.filter(point => !customPoints.includes(point));
+  const handleTogglePendingPoint = (point: string) => {
+    if (pendingPoints.includes(point)) {
+      setPendingPoints(pendingPoints.filter(p => p !== point));
+    } else {
+      setPendingPoints([...pendingPoints, point]);
+    }
+  };
+
+  const handleAddPendingPoints = () => {
+    const newCustomPoints = pendingPoints.filter(point => !customPoints.includes(point));
     setCustomPoints([...customPoints, ...newCustomPoints]);
     onChange([...selectedPoints, ...newCustomPoints]);
+    setPendingPoints([]);
     setShowAddDialog(false);
     setSearchQuery("");
   };
@@ -139,46 +155,58 @@ const KnowledgePointSelector = ({ order, selectedPoints, onChange }: KnowledgePo
               />
             </div>
             
-            {searchResults.length > 0 && (
+            {getSearchResults().length > 0 && (
               <div className="space-y-2">
-                <p className="text-sm font-medium">搜索结果：</p>
+                <p className="text-sm font-medium">可选知识点：</p>
                 <div className="max-h-32 overflow-y-auto space-y-1">
-                  {searchResults.map((result, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-2 hover:bg-muted rounded cursor-pointer"
-                      onClick={() => handleAddCustomPoints([result])}
-                    >
-                      <span className="text-sm">{result}</span>
-                      <Plus className="w-4 h-4" />
+                  {getSearchResults().map((result, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 hover:bg-muted rounded">
+                      <Checkbox
+                        checked={pendingPoints.includes(result)}
+                        onCheckedChange={() => handleTogglePendingPoint(result)}
+                      />
+                      <span className="text-sm flex-1">{result}</span>
                     </div>
                   ))}
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleAddCustomPoints(searchResults)}
-                  className="w-full"
-                >
-                  添加全部搜索结果
-                </Button>
+              </div>
+            )}
+
+            {pendingPoints.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">待添加知识点：</p>
+                <div className="bg-muted/50 rounded p-2 space-y-1">
+                  {pendingPoints.map((point, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-sm">{point}</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleTogglePendingPoint(point)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
             <div className="flex gap-2 pt-4">
-              <Button variant="outline" onClick={() => setShowAddDialog(false)} className="flex-1">
+              <Button variant="outline" onClick={() => {
+                setShowAddDialog(false);
+                setPendingPoints([]);
+                setSearchQuery("");
+              }} className="flex-1">
                 取消
               </Button>
               <Button
-                onClick={() => {
-                  if (searchQuery.trim()) {
-                    handleAddCustomPoints([searchQuery.trim()]);
-                  }
-                }}
-                disabled={!searchQuery.trim()}
+                onClick={handleAddPendingPoints}
+                disabled={pendingPoints.length === 0}
                 className="flex-1"
               >
-                直接添加
+                添加 ({pendingPoints.length})
               </Button>
             </div>
           </div>

@@ -261,7 +261,7 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
         ref={setNodeRef} 
         style={style} 
         className={cn(
-          "relative flex flex-col h-full",
+          "relative flex flex-col quiz-card",
           isDragging && "shadow-lg"
         )}
       >
@@ -310,32 +310,27 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
         <CardContent className="pt-0 flex-1 flex flex-col">
           <div className="space-y-3 flex-1">
             <div>
-              <p className="font-medium text-sm leading-tight line-clamp-3">
+              <p className="font-medium text-sm leading-tight">
                 {index + 1}. {question.title}
               </p>
             </div>
             
             {question.options && (
               <div className="space-y-1 flex-1">
-                {question.options.slice(0, 3).map((option, optIndex) => (
+                {question.options.map((option, optIndex) => (
                   <div key={optIndex} className={cn(
-                    "text-xs leading-tight line-clamp-1",
+                    "text-xs leading-tight",
                     !hideAnswers && question.correctAnswer === optIndex && "text-green-600 font-medium"
                   )}>
                     {String.fromCharCode(65 + optIndex)}. {option}
                   </div>
                 ))}
-                {question.options.length > 3 && (
-                  <div className="text-xs text-muted-foreground">
-                    +{question.options.length - 3} 更多选项
-                  </div>
-                )}
               </div>
             )}
 
             {question.answer && !hideAnswers && (
               <div>
-                <p className="text-xs leading-tight line-clamp-2">
+                <p className="text-xs leading-tight">
                   <span className="font-medium">参考答案：</span>{question.answer}
                 </p>
               </div>
@@ -344,10 +339,10 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
 
           {!hideAnswers && (
             <div className="text-xs text-muted-foreground border-t pt-2 mt-3 space-y-1">
-              <p className="line-clamp-2">
+              <p>
                 <span className="font-medium">解析：</span>{question.explanation}
               </p>
-              <p className="line-clamp-1">
+              <p>
                 <span className="font-medium">知识点：</span>{question.knowledgePoint}
               </p>
             </div>
@@ -559,20 +554,20 @@ const QuizEditor = ({ questions: initialQuestions, config, onBack, onSave }: Qui
         collisionDetection={closestCenter}
         onDragEnd={handleDragEnd}
       >
-        <SortableContext 
-          items={questions.map(q => q.id)} 
-          strategy={rectSortingStrategy}
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {questions.map((question, index) => (
-              <SortableQuestionItem 
-                key={question.id} 
-                question={question} 
-                index={index} 
-              />
-            ))}
-          </div>
-        </SortableContext>
+          <SortableContext 
+            items={questions.map(q => q.id)} 
+            strategy={rectSortingStrategy}
+          >
+            <div className="quiz-grid">
+              {questions.map((question, index) => (
+                <SortableQuestionItem 
+                  key={question.id} 
+                  question={question} 
+                  index={index} 
+                />
+              ))}
+            </div>
+          </SortableContext>
       </DndContext>
 
       {/* Fixed Action Buttons */}

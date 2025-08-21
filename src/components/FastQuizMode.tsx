@@ -162,16 +162,10 @@ const FastQuizMode = ({ order, onBack, onGenerate }: FastQuizModeProps) => {
                       <p className="text-xs text-muted-foreground">{scenario.description}</p>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        {scenario.questionCount.min}-{scenario.questionCount.max}题
-                      </Badge>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {scenario.features.slice(0, 2).join('、')}
-                      {scenario.features.length > 2 && '...'}
-                    </div>
+                  <div>
+                    <Badge variant="secondary" className="text-xs">
+                      {scenario.questionCount.min}-{scenario.questionCount.max}题
+                    </Badge>
                   </div>
                 </CardContent>
               </Card>

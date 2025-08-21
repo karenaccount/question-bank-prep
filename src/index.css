@@ -140,4 +140,29 @@ All colors MUST be HSL.
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
   }
+
+  /* Quiz grid styles for equal height cards */
+  .quiz-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+    align-items: start;
+  }
+
+  @media (min-width: 640px) {
+    .quiz-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .quiz-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  .quiz-card {
+    min-height: 280px;
+    height: 100%;
+  }
 }
