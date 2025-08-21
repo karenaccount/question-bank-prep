@@ -19,17 +19,17 @@ const KnowledgePointSelector = ({ order, selectedPoints, onChange }: KnowledgePo
   const [searchQuery, setSearchQuery] = useState("");
   const [customPoints, setCustomPoints] = useState<string[]>([]);
 
+  const getAllKnowledgePoints = () => {
+    const lecturePoints = order.lectureNotes.flatMap(note => note.knowledgePoints);
+    return [...lecturePoints, ...customPoints];
+  };
+
   // 模拟搜索结果
   const searchResults = searchQuery.trim() ? [
     `${searchQuery} - 基础概念`,
     `${searchQuery} - 应用技巧`,
     `${searchQuery} - 实践方法`,
   ].filter(point => !getAllKnowledgePoints().includes(point)) : [];
-
-  const getAllKnowledgePoints = () => {
-    const lecturePoints = order.lectureNotes.flatMap(note => note.knowledgePoints);
-    return [...lecturePoints, ...customPoints];
-  };
 
   const handlePointToggle = (point: string) => {
     if (selectedPoints.includes(point)) {
