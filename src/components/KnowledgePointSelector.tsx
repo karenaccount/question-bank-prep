@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,22 @@ const KnowledgePointSelector = ({ order, selectedPoints, onChange }: KnowledgePo
   const [searchQuery, setSearchQuery] = useState("");
   const [customPoints, setCustomPoints] = useState<string[]>([]);
   const [pendingPoints, setPendingPoints] = useState<string[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
+
+  // 监听点击外部区域收起下拉列表
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const getAllKnowledgePoints = () => {
     const lecturePoints = order.lectureNotes.flatMap(note => note.knowledgePoints);
@@ -145,17 +161,21 @@ const KnowledgePointSelector = ({ order, selectedPoints, onChange }: KnowledgePo
             <DialogTitle>添加知识点</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="relative">
+            <div className="relative" ref={searchRef}>
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="输入关键词搜索知识点..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowDropdown(true);
+                }}
+                onFocus={() => setShowDropdown(true)}
                 className="pl-10"
               />
               
               {/* 下拉搜索结果 */}
-              {searchQuery.trim() && getSearchResults().length > 0 && (
+              {showDropdown && searchQuery.trim() && getSearchResults().length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-md shadow-lg z-50 max-h-40 overflow-y-auto">
                   {getSearchResults().map((result, index) => (
                     <div
@@ -200,6 +220,7 @@ const KnowledgePointSelector = ({ order, selectedPoints, onChange }: KnowledgePo
                 setShowAddDialog(false);
                 setPendingPoints([]);
                 setSearchQuery("");
+                setShowDropdown(false);
               }} className="flex-1">
                 取消
               </Button>
