@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Settings, BookOpen, Target, Zap } from "lucide-react";
 import { Order } from "@/data/mockOrders";
+import KnowledgePointSelector from "./KnowledgePointSelector";
 
 interface DetailedQuizModeProps {
   order: Order;
@@ -94,19 +95,52 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
   };
 
   const handleDifficultyChange = (key: 'basic' | 'ability' | 'comprehensive', value: number) => {
-    const remaining = 100 - value;
     const otherKeys = (['basic', 'ability', 'comprehensive'] as const).filter(k => k !== key);
+    
+    // 如果当前值为0，直接分配给其他两个
+    if (value === 0) {
+      const remaining = 100;
+      const [first, second] = otherKeys;
+      // 平均分配给其他两个
+      const halfRemaining = remaining / 2;
+      setDifficultyRatio({
+        [key]: 0,
+        [first]: halfRemaining,
+        [second]: halfRemaining
+      } as typeof difficultyRatio);
+      return;
+    }
+
+    // 计算剩余值
+    const remaining = 100 - value;
     const [first, second] = otherKeys;
-    
-    // Keep the first other key unchanged, adjust the second
-    const firstValue = difficultyRatio[first];
-    const secondValue = remaining - firstValue;
-    
-    setDifficultyRatio({
-      ...difficultyRatio,
-      [key]: value,
-      [second]: Math.max(0, secondValue)
-    });
+
+    // 如果其中一个为0，将所有剩余值给另一个
+    if (difficultyRatio[first] === 0) {
+      setDifficultyRatio({
+        ...difficultyRatio,
+        [key]: value,
+        [second]: remaining
+      });
+    } else if (difficultyRatio[second] === 0) {
+      setDifficultyRatio({
+        ...difficultyRatio,
+        [key]: value,
+        [first]: remaining
+      });
+    } else {
+      // 两个都不为0，按比例分配
+      const total = difficultyRatio[first] + difficultyRatio[second];
+      const firstRatio = difficultyRatio[first] / total;
+      const secondRatio = difficultyRatio[second] / total;
+      
+      setDifficultyRatio({
+        ...difficultyRatio,
+        [key]: value,
+        [first]: Math.round(remaining * firstRatio),
+        [second]: Math.round(remaining * secondRatio)
+      });
+    }
   };
 
   const getSelectedDifficultyTypes = () => {
@@ -122,7 +156,6 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
       questionTypes: Object.fromEntries(
         Object.entries(questionTypes).filter(([_, config]) => config.enabled)
       ),
-      sourceRatio,
       difficultyRatio,
       totalScore: enableIndividualScoring ? getCalculatedTotalScore() : totalScore,
       duration,
@@ -162,17 +195,11 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
               <CardTitle className="text-base">选择知识点</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {order.knowledgePoints.map((point) => (
-                  <label key={point} className="flex items-center gap-3 cursor-pointer">
-                    <Checkbox
-                      checked={selectedKnowledgePoints.includes(point)}
-                      onCheckedChange={() => handleKnowledgePointToggle(point)}
-                    />
-                    <span className="text-sm">{point}</span>
-                  </label>
-                ))}
-              </div>
+              <KnowledgePointSelector
+                order={order}
+                selectedPoints={selectedKnowledgePoints}
+                onChange={setSelectedKnowledgePoints}
+              />
             </CardContent>
           </Card>
 
@@ -278,39 +305,6 @@ const DetailedQuizMode = ({ order, onBack, onGenerate }: DetailedQuizModeProps) 
 
         {/* 右列 */}
         <div className="space-y-6">
-          {/* 题目来源配置 */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">题目来源配置</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>小班题库</span>
-                  <span>{sourceRatio.xiaoban}%</span>
-                </div>
-                <Slider
-                  value={[sourceRatio.xiaoban]}
-                  onValueChange={([value]) => setSourceRatio({ xiaoban: value, realExam: 100 - value })}
-                  max={100}
-                  step={10}
-                />
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>真题</span>
-                  <span>{sourceRatio.realExam}%</span>
-                </div>
-                <Slider
-                  value={[sourceRatio.realExam]}
-                  onValueChange={([value]) => setSourceRatio({ xiaoban: 100 - value, realExam: value })}
-                  max={100}
-                  step={10}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
           {/* 分值和时长设置 */}
           <Card>
             <CardHeader>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,14 @@ const IntelligentGeneration = () => {
   const [quizConfig, setQuizConfig] = useState<any>(null);
   const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
 
+  // 默认选中第一个订单
+  useEffect(() => {
+    if (mockOrders.length > 0) {
+      const defaultOrder = mockOrders[0];
+      setSelectedOrder(defaultOrder);
+      setSearchQuery(defaultOrder.name);
+    }
+  }, []);
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     
@@ -208,17 +216,27 @@ const IntelligentGeneration = () => {
                       <p className="text-sm text-muted-foreground mb-2">
                         学生：{selectedOrder.student} | 课程：{selectedOrder.course}
                       </p>
-                      <div className="text-sm">
-                        <p className="font-medium mb-1">相关知识点：</p>
-                        <ul className="text-muted-foreground space-y-1">
-                          {selectedOrder.knowledgePoints.map((point, index) => (
-                            <li key={index} className="flex items-center gap-2">
-                              <FileText className="w-3 h-3" />
-                              {point}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                       <div className="text-sm">
+                         <p className="font-medium mb-2">相关知识点：</p>
+                         <div className="space-y-3">
+                           {selectedOrder.lectureNotes.map((lectureNote, index) => (
+                             <div key={lectureNote.id} className="border border-border/50 rounded-lg p-3 bg-background/50">
+                               <div className="flex items-center gap-2 mb-2">
+                                 <FileText className="w-4 h-4 text-primary" />
+                                 <span className="font-medium text-sm">{lectureNote.name}</span>
+                                 <Badge variant="secondary" className="text-xs">PDF</Badge>
+                               </div>
+                               <div className="flex flex-wrap gap-1">
+                                 {lectureNote.knowledgePoints.map((point, pointIndex) => (
+                                   <Badge key={pointIndex} variant="outline" className="text-xs">
+                                     {point}
+                                   </Badge>
+                                 ))}
+                               </div>
+                             </div>
+                           ))}
+                         </div>
+                       </div>
                     </div>
                     <Button 
                       variant="outline" 
